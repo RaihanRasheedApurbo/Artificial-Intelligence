@@ -84,56 +84,76 @@ int main()
     {
         colorAssigned.push_back(-5);
     }
-    // int totalColorSoFar = 0;
+    int totalColorSoFar = 0;
+    vector<int> colorFrequency;
 
-    // function<bool<Node,Node>> compareNode = 
-    // {
+    function<bool(Node,Node)> compareNode = [&] (Node n1, Node n2) -> bool
+    {
+        return n1.studentsTaken<n2.studentsTaken;
+
+    };
+
+    sort(courseFrequency.begin(),courseFrequency.end(),compareNode);
+    reverse(courseFrequency.begin(),courseFrequency.end());
+
+    for(auto &t : courseFrequency)
+    {
+        int vertex = t.courseNo;
+        set<int> s;
+        for(int i=0;i<totalColorSoFar;i++)
+        {
+            s.insert(i);
+        }
+        for( int i=0;i<adjMatrix[vertex].size();i++)
+        {
+            int t1 = adjMatrix[vertex][i];
+            if(t1>0)
+            {
+                int color = colorAssigned[i];
+                if(color>=0)
+                {
+                    s.erase(color);
+                }
+            }
+        }
+        int colorContender = -1;
+        int contenderFrequency = INT_MAX;
+
+        for( auto it = s.begin(); it!=s.end() ; it++)
+        {
+            int color = *it;
+            int freq = colorFrequency[color];
+            if(freq<=contenderFrequency)
+            {
+                colorContender = color;
+                contenderFrequency = freq;
+            }
+        }
+
+        if(colorContender == -1)
+        {
+            colorContender = totalColorSoFar;
+            totalColorSoFar++;
+            contenderFrequency = 1;
+            colorFrequency.push_back(contenderFrequency);
+        }
+        else
+        {
+            colorFrequency[colorContender]++;
+        }
+        colorAssigned[vertex] = colorContender;
+        
 
 
-    // } ;
-    // for(auto &t1 : adjMatrix)
-    // {
-    //     for(auto &t2 : t1)
-    //     {
-    //         cout<<t2<<" ";
-    //     }
-    //     cout<<endl;
-    // }
+
+    }
+    cout<<totalColorSoFar<<endl;
 
 
-
-
-    // for(auto &t: courseFrequency)
-    // {
-    //     cout<<t.courseNo<<" "<<t.studentsTaken<<endl;
-    // }
 
     
-    // for(auto t1:courses)
-    // {
-    //     for(auto t2:t1)
-    //     {
-    //         cout<<t2<<" ";
-    //     }
-    //     cout<<endl;
-    // }
-
-    // cin>>t;
-    // cout<<t<<endl;
-    // cin>>t;
-    // cout<<t<<endl;
-    // cin>>t;
-    // cout<<t<<endl;
-    // cin>>t;
-    // cout<<t<<endl;
 
 
-
-    // freopen("yor-f-83.stu","r",stdin);
-
-    // freopen("yor-f-83.stu","r",stdin);
-    // int t;
-    // cin>>t;
-    // cout<<t<<endl;
+    
      return 0;
 }
