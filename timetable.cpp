@@ -2,17 +2,36 @@
 using namespace std;
 int main()
 {
-    cout<<"kill meh"<<endl;
+    //cout<<"kill meh"<<endl;
+    
     vector<vector<int>> courses;
-    freopen("test.txt","r",stdin);
-    int t;
-    // cin>>t;
-    // cout<<t<<endl;
-    while(!cin.eof())
+    ifstream file("yor-f-83.stu");
+    string str;
+    int i=0;
+    while (getline(file, str)) 
     {
-        cin>>t;
-        cout<<t<<endl;
+        vector<int> currentStudent;
+        stringstream ss;
+        ss<<str;
+        while(!ss.eof())
+        {
+            int t;
+            ss>>t;
+            currentStudent.push_back(t);
+        }
+        courses.push_back(currentStudent);
+        
     }
+    
+    // for(auto t1:courses)
+    // {
+    //     for(auto t2:t1)
+    //     {
+    //         cout<<t2<<" ";
+    //     }
+    //     cout<<endl;
+    // }
+
     // cin>>t;
     // cout<<t<<endl;
     // cin>>t;
@@ -30,5 +49,5 @@ int main()
     // int t;
     // cin>>t;
     // cout<<t<<endl;
-    // return 0;
+     return 0;
 }
