@@ -87,72 +87,147 @@ int main()
     int totalColorSoFar = 0;
     vector<int> colorFrequency;
 
-    function<bool(Node,Node)> compareNode = [&] (Node n1, Node n2) -> bool
+    function<void()> largestEnrollment = [&] () -> void
     {
-        return n1.studentsTaken<n2.studentsTaken;
+        function<bool(Node,Node)> compareNode = [&] (Node n1, Node n2) -> bool
+        {
+            return n1.studentsTaken<n2.studentsTaken;
+
+        };
+
+        sort(courseFrequency.begin(),courseFrequency.end(),compareNode);
+        reverse(courseFrequency.begin(),courseFrequency.end());
+
+        for(auto &t : courseFrequency)
+        {
+            int vertex = t.courseNo;
+            set<int> s;
+            for(int i=0;i<totalColorSoFar;i++)
+            {
+                s.insert(i);
+            }
+            for( int i=0;i<adjMatrix[vertex].size();i++)
+            {
+                int t1 = adjMatrix[vertex][i];
+                if(t1>0)
+                {
+                    int color = colorAssigned[i];
+                    if(color>=0)
+                    {
+                        s.erase(color);
+                    }
+                }
+            }
+            int colorContender = -1;
+            int contenderFrequency = INT_MAX;
+
+            for( auto it = s.begin(); it!=s.end() ; it++)
+            {
+                int color = *it;
+                int freq = colorFrequency[color];
+                if(freq<=contenderFrequency)
+                {
+                    colorContender = color;
+                    contenderFrequency = freq;
+                }
+            }
+
+            if(colorContender == -1)
+            {
+                colorContender = totalColorSoFar;
+                totalColorSoFar++;
+                contenderFrequency = 1;
+                colorFrequency.push_back(contenderFrequency);
+            }
+            else
+            {
+                colorFrequency[colorContender]++;
+            }
+            colorAssigned[vertex] = colorContender;
+            
+
+
+
+        }
+        // cout<<totalColorSoFar<<endl;
+        // for(i=0;i<colorFrequency.size();i++)
+        // {
+        //     cout<<i<<" "<<colorFrequency[i]<<endl;
+        // }
 
     };
 
-    sort(courseFrequency.begin(),courseFrequency.end(),compareNode);
-    reverse(courseFrequency.begin(),courseFrequency.end());
+    largestEnrollment();
 
-    for(auto &t : courseFrequency)
+    function<int(void)> countPenalty = [&] () -> int 
     {
-        int vertex = t.courseNo;
-        set<int> s;
-        for(int i=0;i<totalColorSoFar;i++)
+        int penalty = 0;
+        unordered_map<int,int> penaltyAmount;
+        penaltyAmount[1] = 16;
+        penaltyAmount[2] = 8;
+        penaltyAmount[3] = 4;
+        penaltyAmount[4] = 2;
+        penaltyAmount[5] = 1;
+        for(auto &t : courses)
         {
-            s.insert(i);
-        }
-        for( int i=0;i<adjMatrix[vertex].size();i++)
-        {
-            int t1 = adjMatrix[vertex][i];
-            if(t1>0)
+            vector<int> slots;
+            for(auto &t1 : t)
             {
-                int color = colorAssigned[i];
-                if(color>=0)
+                slots.push_back(colorAssigned[t1]);
+            }
+            sort(slots.begin(),slots.end());
+            int penaltyForAStudent = 0;
+            for(int i=1;i<slots.size();i++)
+            {
+                int dif = slots[i] - slots[i-1];
+                if(dif<=5)
                 {
-                    s.erase(color);
+                    penaltyForAStudent += penaltyAmount[dif];
                 }
             }
-        }
-        int colorContender = -1;
-        int contenderFrequency = INT_MAX;
+            //cout<<penaltyForAStudent<<endl;
+            penalty += penaltyForAStudent;
 
-        for( auto it = s.begin(); it!=s.end() ; it++)
-        {
-            int color = *it;
-            int freq = colorFrequency[color];
-            if(freq<=contenderFrequency)
-            {
-                colorContender = color;
-                contenderFrequency = freq;
-            }
         }
-
-        if(colorContender == -1)
-        {
-            colorContender = totalColorSoFar;
-            totalColorSoFar++;
-            contenderFrequency = 1;
-            colorFrequency.push_back(contenderFrequency);
-        }
-        else
-        {
-            colorFrequency[colorContender]++;
-        }
-        colorAssigned[vertex] = colorContender;
+        penalty = penalty/courses.size();// avg penalty
+        cout<<"penalty: "<<penalty<<endl;
+        return penalty;
         
+    };
 
-
-
-    }
-    cout<<totalColorSoFar<<endl;
-
-
-
+    int p = countPenalty();
     
 
+
+    // int penalty = 0;
+    // unordered_map<int,int> penaltyAmount;
+    // penaltyAmount[1] = 16;
+    // penaltyAmount[2] = 8;
+    // penaltyAmount[3] = 4;
+    // penaltyAmount[4] = 2;
+    // penaltyAmount[5] = 1;
+    // for(auto &t : courses)
+    // {
+    //     vector<int> slots;
+    //     for(auto &t1 : t)
+    //     {
+    //         slots.push_back(colorAssigned[t1]);
+    //     }
+    //     sort(slots.begin(),slots.end());
+    //     int penaltyForAStudent = 0;
+    //     for(int i=1;i<slots.size();i++)
+    //     {
+    //         int dif = slots[i] - slots[i-1];
+    //         if(dif<=5)
+    //         {
+    //             penaltyForAStudent += penaltyAmount[dif];
+    //         }
+    //     }
+    //     //cout<<penaltyForAStudent<<endl;
+    //     penalty += penaltyForAStudent;
+
+    // }
+    // cout<<penalty/(courses.size())<<endl;
 
     
      return 0;
