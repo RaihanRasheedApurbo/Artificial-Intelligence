@@ -13,7 +13,7 @@ int main()
     string courseFile = "yor-f-83.crs";
     // string studentFile = "test2.txt";
     // string courseFile = "test.txt";
-    vector<vector<int>> courses;
+    vector<vector<int>> studentCourseList;
     ifstream file(studentFile);
     string str;
     int i=0;
@@ -28,7 +28,7 @@ int main()
             ss>>t;
             currentStudent.push_back(t);
         }
-        courses.push_back(currentStudent);
+        studentCourseList.push_back(currentStudent);
         
     }
     file.close();
@@ -65,7 +65,7 @@ int main()
         adjMatrix.push_back(t);
     }
 
-    for(auto &t : courses)
+    for(auto &t : studentCourseList)
     {
         for(int i=0;i<t.size();i++)
         {
@@ -159,16 +159,16 @@ int main()
 
     largestEnrollment();
 
-    function<int(void)> countPenalty = [&] () -> int 
+    function<float(void)> countPenalty = [&] () -> float 
     {
-        int penalty = 0;
+        float penalty = 0;
         unordered_map<int,int> penaltyAmount;
         penaltyAmount[1] = 16;
         penaltyAmount[2] = 8;
         penaltyAmount[3] = 4;
         penaltyAmount[4] = 2;
         penaltyAmount[5] = 1;
-        for(auto &t : courses)
+        for(auto &t : studentCourseList)
         {
             vector<int> slots;
             for(auto &t1 : t)
@@ -189,45 +189,109 @@ int main()
             penalty += penaltyForAStudent;
 
         }
-        penalty = penalty/courses.size();// avg penalty
-        cout<<"penalty: "<<penalty<<endl;
+        float t = studentCourseList.size();
+        penalty = penalty/t;// avg penalty
+        //cout<<"penalty: "<<penalty<<endl;
         return penalty;
         
     };
 
-    int p = countPenalty();
-    
+    float avgPenalty = countPenalty();
+    float currentPenalty = avgPenalty;
+    cout<<"total color needed: "<<totalColorSoFar<<endl;
+    cout<<"penalty: "<<avgPenalty<<endl;
+    function<void()> kempeChainInterchange = [&] () -> void 
+    {
+        for(int i=0;i<courseFrequency.size();i++)
+        {
+
+            int vertex1 = courseFrequency[i].courseNo;
+            int c1 = colorAssigned[vertex1];
+            for(int j=i+1;j<courseFrequency.size();j++)
+            {
+                int vertex2 = courseFrequency[j].courseNo;
+                if(adjMatrix[vertex1][vertex2]<=0)
+                {
+                    continue;
+                }
+                int c2 = colorAssigned[vertex2];
+                bool *visited = new bool[totalNode];
+                for(int i=0;i<totalNode;i++)
+                {
+                    visited[i] = false;
+                }
+                
+
+                vector<int> sameColorVertices;
+
+                stack<int> s;
+                s.push(vertex2);
+                s.push(vertex1);
+                sameColorVertices.push_back(vertex1);
+                sameColorVertices.push_back(vertex2);
+                visited[vertex1] = true;
+                visited[vertex2] = true;
+                while(!s.empty())
+                {
+                    int t = s.top();
+                    s.pop();
+                    for(int i=0;i<adjMatrix[t].size();i++)
+                    {
+                        if(adjMatrix[t][i]>0 && visited[i]==false)
+                        {
+                            if(colorAssigned[i]==c1 || colorAssigned[i]==c2)
+                            {
+                                s.push(i);
+                                sameColorVertices.push_back(i);
+                                visited[i] = true;
+
+                            }
+                        }
+                    }
+                }
+
+                for(auto &t : sameColorVertices)
+                {
+                    if(colorAssigned[t]==c1)
+                    {
+                        colorAssigned[t] = c2;
+                    }
+                    else
+                    {
+                        colorAssigned[t] = c1;
+                    }
+                }
+
+                float newPenalty = countPenalty();
+                //cout<<"newPenalty: "<<newPenalty<<endl;
+                if(newPenalty>currentPenalty)
+                {
+                    for(auto &t : sameColorVertices)
+                    {
+                        if(colorAssigned[t]==c1)
+                        {
+                            colorAssigned[t] = c2;
+                        }
+                        else
+                        {
+                            colorAssigned[t] = c1;
+                        }
+                    }
+                }
+                else
+                {
+                    currentPenalty = newPenalty;
+                }
+                
 
 
-    // int penalty = 0;
-    // unordered_map<int,int> penaltyAmount;
-    // penaltyAmount[1] = 16;
-    // penaltyAmount[2] = 8;
-    // penaltyAmount[3] = 4;
-    // penaltyAmount[4] = 2;
-    // penaltyAmount[5] = 1;
-    // for(auto &t : courses)
-    // {
-    //     vector<int> slots;
-    //     for(auto &t1 : t)
-    //     {
-    //         slots.push_back(colorAssigned[t1]);
-    //     }
-    //     sort(slots.begin(),slots.end());
-    //     int penaltyForAStudent = 0;
-    //     for(int i=1;i<slots.size();i++)
-    //     {
-    //         int dif = slots[i] - slots[i-1];
-    //         if(dif<=5)
-    //         {
-    //             penaltyForAStudent += penaltyAmount[dif];
-    //         }
-    //     }
-    //     //cout<<penaltyForAStudent<<endl;
-    //     penalty += penaltyForAStudent;
 
-    // }
-    // cout<<penalty/(courses.size())<<endl;
+                
+            }
+        }
+    };
+    kempeChainInterchange();
+    cout<<"after kempe chain interchange new penalty: "<<currentPenalty<<endl;
 
     
      return 0;
