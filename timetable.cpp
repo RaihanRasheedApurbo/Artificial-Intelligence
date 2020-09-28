@@ -80,15 +80,17 @@ int main()
     }
 
     vector<int> colorAssigned;
-    for(int i=0;i<totalNode;i++)
-    {
-        colorAssigned.push_back(-5);
-    }
     int totalColorSoFar = 0;
-    vector<int> colorFrequency;
+    
 
     function<void()> largestEnrollment = [&] () -> void
     {
+        for(int i=0;i<totalNode;i++)
+        {
+            colorAssigned.push_back(-5);
+        }
+        totalColorSoFar = 0;
+        vector<int> colorFrequency;
         function<bool(Node,Node)> compareNode = [&] (Node n1, Node n2) -> bool
         {
             return n1.studentsTaken<n2.studentsTaken;
@@ -101,9 +103,10 @@ int main()
         for(auto &t : courseFrequency)
         {
             int vertex = t.courseNo;
-            set<int> s;
+            unordered_set <int> s;
             for(int i=0;i<totalColorSoFar;i++)
             {
+                
                 s.insert(i);
             }
             for( int i=0;i<adjMatrix[vertex].size();i++)
@@ -147,7 +150,6 @@ int main()
             
 
 
-
         }
         // cout<<totalColorSoFar<<endl;
         // for(i=0;i<colorFrequency.size();i++)
@@ -157,7 +159,104 @@ int main()
 
     };
 
-    largestEnrollment();
+    function<void()> DSatur = [&] () -> void
+    {
+        for(int i=0;i<totalNode;i++)
+        {
+            colorAssigned.push_back(-5);
+        }
+        totalColorSoFar = 0;
+        unordered_map<int,int> degree;
+        for(int i=0;i<adjMatrix.size();i++)
+        {
+            int count = 0;
+            for(int j=0;j<adjMatrix[i].size();j++)
+            {
+                if(adjMatrix[i][j]>0)
+                {
+                    count++;
+                }
+            }
+            degree[i] = count;
+        }
+        unordered_map<int,int> sat;
+        for(int i=0;i<degree.size();i++)
+        {
+            sat[i] = 0;
+        }
+
+        while(!sat.empty())
+        {
+            int cs = -5;  // current saturation
+            int cd = -5;  // current degree
+            int cv = -5;  // current vertex
+            for(auto &t : sat)
+            {
+                int key = t.first;
+                int val = t.second;
+                if(cs<val)
+                {
+                    cv = key;
+                    cd = degree[key];
+                    cs = val;
+                }
+                else if(cs==val)
+                {
+                    if(cd<degree[key])
+                    {
+                        cv = key;
+                        cd = degree[key];
+                        cs = val;
+                    }
+                }
+                
+            }
+            unordered_set<int> s;
+            for(int i=0;i<totalColorSoFar;i++)
+            {
+                s.insert(i);
+            }
+            for(int i=0;i<adjMatrix[cv].size();i++)
+            {
+                if(adjMatrix[cv][i]>0)
+                {
+                    if(colorAssigned[i]>=0)
+                    {
+                        s.erase(colorAssigned[i]);
+                    }
+                }
+            }
+            int vColor;
+            if(s.empty())
+            {
+                vColor = totalColorSoFar;
+                totalColorSoFar++;
+            }
+            else
+            {
+                vColor = *(s.begin());
+            }
+            colorAssigned[cv] = vColor;
+            for(int i=0;i<adjMatrix[cv].size();i++)
+            {
+                if(adjMatrix[cv][i]>0)
+                {
+                    if(sat.find(i)!=sat.end())
+                    {
+                        sat[i]++;
+                    }
+                }
+            }
+            sat.erase(cv);
+            
+
+
+        }
+        cout<<totalColorSoFar<<endl;
+
+    };
+    DSatur();
+    //largestEnrollment();
 
     function<float(void)> countPenalty = [&] () -> float 
     {
@@ -209,16 +308,18 @@ int main()
             int c1 = colorAssigned[vertex1];
             for(int j=i+1;j<courseFrequency.size();j++)
             {
+                
                 int vertex2 = courseFrequency[j].courseNo;
+                int c2 = colorAssigned[vertex2];
                 if(adjMatrix[vertex1][vertex2]<=0)
                 {
                     continue;
                 }
-                int c2 = colorAssigned[vertex2];
+                
                 bool *visited = new bool[totalNode];
-                for(int i=0;i<totalNode;i++)
+                for(int z=0;z<totalNode;z++)
                 {
-                    visited[i] = false;
+                    visited[z] = false;
                 }
                 
 
@@ -235,15 +336,15 @@ int main()
                 {
                     int t = s.top();
                     s.pop();
-                    for(int i=0;i<adjMatrix[t].size();i++)
+                    for(int i1=0;i1<adjMatrix[t].size();i1++)
                     {
-                        if(adjMatrix[t][i]>0 && visited[i]==false)
+                        if(adjMatrix[t][i1]>0 && visited[i1]==false)
                         {
-                            if(colorAssigned[i]==c1 || colorAssigned[i]==c2)
+                            if(colorAssigned[i1]==c1 || colorAssigned[i1]==c2)
                             {
-                                s.push(i);
-                                sameColorVertices.push_back(i);
-                                visited[i] = true;
+                                s.push(i1);
+                                sameColorVertices.push_back(i1);
+                                visited[i1] = true;
 
                             }
                         }
@@ -292,7 +393,7 @@ int main()
     };
     kempeChainInterchange();
     cout<<"after kempe chain interchange new penalty: "<<currentPenalty<<endl;
-
+    cout<<"bye1"<<endl;
     
      return 0;
 }
