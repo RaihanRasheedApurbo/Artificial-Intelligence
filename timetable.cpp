@@ -299,6 +299,8 @@ int main()
     float currentPenalty = avgPenalty;
     cout<<"total color needed: "<<totalColorSoFar<<endl;
     cout<<"penalty: "<<avgPenalty<<endl;
+    
+    
     function<void()> kempeChainInterchange = [&] () -> void 
     {
         for(int i=0;i<courseFrequency.size();i++)
@@ -391,6 +393,7 @@ int main()
             }
         }
     };
+    
     kempeChainInterchange();
     cout<<"after kempe chain interchange new penalty: "<<currentPenalty<<endl;
     cout<<"bye1"<<endl;
