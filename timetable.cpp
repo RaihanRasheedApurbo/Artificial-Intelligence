@@ -8,9 +8,12 @@ struct Node
 };
 int main()
 {
+    string testCaseName = "Toronto/yor-f-83";
+    string studentFile = testCaseName+".stu";
+    string courseFile = testCaseName+".crs";
     //cout<<"kill meh"<<endl;
-    string studentFile = "yor-f-83.stu";
-    string courseFile = "yor-f-83.crs";
+    // string studentFile = "yor-f-83.stu";
+    // string courseFile = "yor-f-83.crs";
     // string studentFile = "test2.txt";
     // string courseFile = "test.txt";
     vector<vector<int>> studentCourseList;
@@ -257,9 +260,14 @@ int main()
     };
     DSatur();
     //largestEnrollment();
-
+    vector<pair<int,int>> blameValue(totalNode);
     function<float(void)> countPenalty = [&] () -> float 
     {
+        for(int i=0;i<blameValue.size();i++)
+        {
+            blameValue[i].first = i;
+            blameValue[i].second = 0;
+        }
         float penalty = 0;
         unordered_map<int,int> penaltyAmount;
         penaltyAmount[1] = 16;
@@ -279,9 +287,16 @@ int main()
             for(int i=1;i<slots.size();i++)
             {
                 int dif = slots[i] - slots[i-1];
+                int left = i-1;
+                int right = i;
+                
                 if(dif<=5)
                 {
+                    
                     penaltyForAStudent += penaltyAmount[dif];
+                    blameValue[left].second += penaltyAmount[dif];
+                    blameValue[right].second += penaltyAmount[dif];
+                    
                 }
             }
             //cout<<penaltyForAStudent<<endl;
@@ -305,7 +320,7 @@ int main()
     {
         for(int i=0;i<courseFrequency.size();i++)
         {
-
+            //cout<<i<<endl;
             int vertex1 = courseFrequency[i].courseNo;
             int c1 = colorAssigned[vertex1];
             for(int j=i+1;j<courseFrequency.size();j++)
@@ -396,7 +411,153 @@ int main()
     
     kempeChainInterchange();
     cout<<"after kempe chain interchange new penalty: "<<currentPenalty<<endl;
+    //cout<<"bye1"<<endl;
+    
+    int targetNode = totalColorSoFar / 5;
+    function<bool(pair<int,int>,pair<int,int>)> comparePair = [&] (pair<int,int> n1, pair<int,int> n2) -> bool
+    {
+        return n1.second<n2.second;
+    };
+    // for(int i=0;i<blameValue.size();i++)
+    // {
+    //     cout<<i<<" "<<blameValue[i].second<<endl;
+    // }
+    sort(blameValue.begin(),blameValue.end(),comparePair);
+    reverse(blameValue.begin(),blameValue.end());
+    vector<int> priority;
+    for(int i=0;i<targetNode;i++)
+    {
+        //cout<<blameValue[i].first<<" "<<blameValue[i].second<<endl;
+        priority.push_back(blameValue[i].first);
+
+    }
+
+    function<void()> DSaturSWO = [&] () -> void
+    {
+        for(int i=0;i<totalNode;i++)
+        {
+            colorAssigned.push_back(-5);
+        }
+        int currentColor = 0;
+        for(int i=0;i<priority.size();i++)
+        {
+            int courseNumber = priority[i];
+            colorAssigned[courseNumber] = currentColor;
+            currentColor += targetNode;
+        }
+        //totalColorSoFar = 0;
+        unordered_map<int,int> degree;
+        for(int i=0;i<adjMatrix.size();i++)
+        {
+            int count = 0;
+            for(int j=0;j<adjMatrix[i].size();j++)
+            {
+                if(adjMatrix[i][j]>0)
+                {
+                    count++;
+                }
+            }
+            degree[i] = count;
+        }
+        unordered_set<int> alreadyColored;
+        
+        unordered_map<int,int> sat;
+        for(int i=0;i<degree.size();i++)
+        {
+            
+            sat[i] = 0;
+            
+            
+        }
+        for(int i=0;i<targetNode;i++)
+        {
+            int ver = priority[i];
+            sat.erase(ver);
+            
+            for(int j=0;j<adjMatrix[ver].size();j++)
+            {
+                if(adjMatrix[ver][j]>0)
+                {
+                    sat[j]++;
+                }
+            }
+        }
+
+        while(!sat.empty())
+        {
+            int cs = -5;  // current saturation
+            int cd = -5;  // current degree
+            int cv = -5;  // current vertex
+            for(auto &t : sat)
+            {
+                int key = t.first;
+                int val = t.second;
+                if(cs<val)
+                {
+                    cv = key;
+                    cd = degree[key];
+                    cs = val;
+                }
+                else if(cs==val)
+                {
+                    if(cd<degree[key])
+                    {
+                        cv = key;
+                        cd = degree[key];
+                        cs = val;
+                    }
+                }
+                
+            }
+            unordered_set<int> s;
+            for(int i=0;i<totalColorSoFar;i++)
+            {
+                s.insert(i);
+            }
+            for(int i=0;i<adjMatrix[cv].size();i++)
+            {
+                if(adjMatrix[cv][i]>0)
+                {
+                    if(colorAssigned[i]>=0)
+                    {
+                        s.erase(colorAssigned[i]);
+                    }
+                }
+            }
+            int vColor;
+            if(s.empty())
+            {
+                vColor = totalColorSoFar;
+                totalColorSoFar++;
+            }
+            else
+            {
+                vColor = *(s.begin());
+            }
+            colorAssigned[cv] = vColor;
+            for(int i=0;i<adjMatrix[cv].size();i++)
+            {
+                if(adjMatrix[cv][i]>0)
+                {
+                    if(sat.find(i)!=sat.end())
+                    {
+                        sat[i]++;
+                    }
+                }
+            }
+            sat.erase(cv);
+            
+
+
+        }
+        cout<<totalColorSoFar<<endl;
+
+    };
+    DSaturSWO();
+    float currentPenaltyAfterSwo = countPenalty();
+    cout<<"after desaturSWO new penalty: "<<currentPenaltyAfterSwo<<endl;
     cout<<"bye1"<<endl;
     
-     return 0;
+    
+    return 0;
 }
