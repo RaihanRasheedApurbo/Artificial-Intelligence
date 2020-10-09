@@ -9,7 +9,7 @@ struct Node
 int main()
 {
 
-    string testCaseName = "Toronto/car-s-91";
+    string testCaseName = "Toronto/yor-f-83";
     string studentFile = testCaseName+".stu";
     string courseFile = testCaseName+".crs";
     //cout<<"kill meh"<<endl;
@@ -259,8 +259,8 @@ int main()
         cout<<totalColorSoFar<<endl;
 
     };
-    DSatur();
-    //largestEnrollment();
+    //DSatur();
+    largestEnrollment();
     vector<pair<int,int>> blameValue(totalNode);
     function<float(void)> countPenalty = [&] () -> float 
     {
@@ -533,7 +533,7 @@ int main()
         while(!nonVisitedVertex.empty()&&iterationNumber<100)
         {
             iterationNumber++;
-            cout<<iterationNumber<<endl;
+            //cout<<iterationNumber<<endl;
             
             int vertex1 = *nonVisitedVertex.begin();
             nonVisitedVertex.erase(vertex1);
