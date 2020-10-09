@@ -9,79 +9,88 @@ struct Node
 int main()
 {
 
-    string testCaseName = "Toronto/yor-f-83";
+    string testCaseName = "Toronto/car-f-92";
     string studentFile = testCaseName+".stu";
     string courseFile = testCaseName+".crs";
-    //cout<<"kill meh"<<endl;
-    // string studentFile = "yor-f-83.stu";
-    // string courseFile = "yor-f-83.crs";
-    // string studentFile = "test2.txt";
-    // string courseFile = "test.txt";
+    
     vector<vector<int>> studentCourseList;
-    ifstream file(studentFile);
-    string str;
-    int i=0;
-    while (getline(file, str)) 
-    {
-        vector<int> currentStudent;
-        stringstream ss;
-        ss<<str;
-        while(!ss.eof())
-        {
-            int t;
-            ss>>t;
-            currentStudent.push_back(t);
-        }
-        studentCourseList.push_back(currentStudent);
-        
-    }
-    file.close();
-    file.open(courseFile);
-
     vector<Node> courseFrequency;
-    while (getline(file, str)) 
+
+    function<void()> fileInput = [&] () -> void
     {
-        
-        stringstream ss(str);
-        int t1,t2;
-        while(!ss.eof())
+        ifstream file(studentFile);
+        string str;
+        int i=0;
+        while (getline(file, str)) 
         {
-            ss>>t1;
-            ss>>t2;
-            Node t3;
-            t3.courseNo = t1;
-            t3.studentsTaken = t2;
-            courseFrequency.push_back(t3);
+            vector<int> currentStudent;
+            stringstream ss;
+            ss<<str;
+            while(!ss.eof())
+            {
+                int t;
+                ss>>t;
+                currentStudent.push_back(t);
+            }
+            studentCourseList.push_back(currentStudent);
+            
         }
+        file.close();
+        file.open(courseFile);
+
         
-        
-        
-    }
+        while (getline(file, str)) 
+        {
+            
+            stringstream ss(str);
+            int t1,t2;
+            while(!ss.eof())
+            {
+                ss>>t1;
+                ss>>t2;
+                Node t3;
+                t3.courseNo = t1;
+                t3.studentsTaken = t2;
+                courseFrequency.push_back(t3);
+            }
+            
+            
+            
+        }
+    };
+    fileInput();
+    
     int totalNode = courseFrequency.size()+1;  // 1 indexing so 0 is dummy node
     vector<vector<int>> adjMatrix;
-    for(int i=0;i<totalNode;i++)
-    {
-        vector<int> t;
-        for(int j=0;j<totalNode;j++)
-        {
-            t.push_back(0);
-        }
-        adjMatrix.push_back(t);
-    }
 
-    for(auto &t : studentCourseList)
+    function<void()> adjacencyMatrixCreation = [&] () -> void
     {
-        for(int i=0;i<t.size();i++)
+        for(int i=0;i<totalNode;i++)
         {
-            int leftVertex = t[i];
-            for(int j=i+1;j<t.size();j++)
+            vector<int> t;
+            for(int j=0;j<totalNode;j++)
             {
-                int rightVertex = t[j];
-                adjMatrix[leftVertex][rightVertex]++;
-                adjMatrix[rightVertex][leftVertex]++;
+                t.push_back(0);
+            }
+            adjMatrix.push_back(t);
+        }
+
+        for(auto &t : studentCourseList)
+        {
+            for(int i=0;i<t.size();i++)
+            {
+                int leftVertex = t[i];
+                for(int j=i+1;j<t.size();j++)
+                {
+                    int rightVertex = t[j];
+                    adjMatrix[leftVertex][rightVertex]++;
+                    adjMatrix[rightVertex][leftVertex]++;
+                }
             }
         }
-    }
+    };
+    adjacencyMatrixCreation();
+    
 
     vector<int> colorAssigned;
     int totalColorSoFar = 0;
@@ -256,11 +265,11 @@ int main()
 
 
         }
-        cout<<totalColorSoFar<<endl;
+        //cout<<totalColorSoFar<<endl;
 
     };
-    //DSatur();
-    largestEnrollment();
+    DSatur();
+    //largestEnrollment();
     vector<pair<int,int>> blameValue(totalNode);
     function<float(void)> countPenalty = [&] () -> float 
     {
@@ -621,27 +630,28 @@ int main()
     cout<<"after kempe chain interchange new penalty: "<<currentPenalty<<endl;
     //cout<<"bye1"<<endl;
     
-    int targetNode = totalColorSoFar / 5;
-    function<bool(pair<int,int>,pair<int,int>)> comparePair = [&] (pair<int,int> n1, pair<int,int> n2) -> bool
+    
+
+    function<void()> DSaturSWO = [&] () -> void
     {
-        return n1.second<n2.second;
-    };
+        int targetNode = totalColorSoFar / 5;
+        function<bool(pair<int,int>,pair<int,int>)> comparePair = [&] (pair<int,int> n1, pair<int,int> n2) -> bool
+        {
+            return n1.second<n2.second;
+        };
     // for(int i=0;i<blameValue.size();i++)
     // {
     //     cout<<i<<" "<<blameValue[i].second<<endl;
     // }
-    sort(blameValue.begin(),blameValue.end(),comparePair);
-    reverse(blameValue.begin(),blameValue.end());
-    vector<int> priority;
-    for(int i=0;i<targetNode;i++)
-    {
-        //cout<<blameValue[i].first<<" "<<blameValue[i].second<<endl;
-        priority.push_back(blameValue[i].first);
+        sort(blameValue.begin(),blameValue.end(),comparePair);
+        reverse(blameValue.begin(),blameValue.end());
+        vector<int> priority;
+        for(int i=0;i<targetNode;i++)
+        {
+            //cout<<blameValue[i].first<<" "<<blameValue[i].second<<endl;
+            priority.push_back(blameValue[i].first);
 
-    }
-
-    function<void()> DSaturSWO = [&] () -> void
-    {
+        }
         for(int i=0;i<totalNode;i++)
         {
             colorAssigned.push_back(-5);
@@ -758,14 +768,18 @@ int main()
 
 
         }
-        cout<<totalColorSoFar<<endl;
+        //cout<<totalColorSoFar<<endl;
 
     };
     DSaturSWO();        
     kempeChainInterchangeV3();
+
+
     float currentPenaltyAfterSwo = countPenalty();
-    cout<<"after desaturSWO new penalty: "<<currentPenaltyAfterSwo<<endl;
-    cout<<"bye1"<<endl;
+    cout<<"after desaturSWO"<<endl;
+    cout<<"total color needed: "<<totalColorSoFar<<endl;
+    cout<<"new penalty: "<<currentPenaltyAfterSwo<<endl;
+    cout<<"bye"<<endl;
     
     
     return 0;
