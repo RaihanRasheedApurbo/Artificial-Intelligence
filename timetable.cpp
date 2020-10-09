@@ -8,7 +8,8 @@ struct Node
 };
 int main()
 {
-    string testCaseName = "Toronto/yor-f-83";
+
+    string testCaseName = "Toronto/car-s-91";
     string studentFile = testCaseName+".stu";
     string courseFile = testCaseName+".crs";
     //cout<<"kill meh"<<endl;
@@ -311,12 +312,14 @@ int main()
     };
 
     float avgPenalty = countPenalty();
-    float currentPenalty = avgPenalty;
+    
     cout<<"total color needed: "<<totalColorSoFar<<endl;
     cout<<"penalty: "<<avgPenalty<<endl;
     
-    
+    float currentPenalty = avgPenalty;
+
     function<void()> kempeChainInterchange = [&] () -> void 
+    
     {
         for(int i=0;i<courseFrequency.size();i++)
         {
@@ -409,7 +412,212 @@ int main()
         }
     };
     
-    kempeChainInterchange();
+    function<void()> kempeChainInterchangeV2 = [&] () -> void 
+    {
+        for(int i=0;i<courseFrequency.size();i++)
+        {
+            cout<<i<<endl;
+            int vertex1 = courseFrequency[i].courseNo;
+            int c1 = colorAssigned[vertex1];
+            for(int j=0;j<colorAssigned.size();j++)
+            {
+                if(c1==j)
+                {
+                    continue;
+                }
+
+                for(int k=0;k<adjMatrix[i].size();k++)
+                {
+                    
+                    if(adjMatrix[i][k]>0 && colorAssigned[k]==j)
+                    {
+
+                
+                        int vertex2 = k;
+                        int c2 = colorAssigned[vertex2];
+                
+                
+                        bool *visited = new bool[totalNode];
+                        for(int z=0;z<totalNode;z++)
+                        {
+                            visited[z] = false;
+                        }
+                
+
+                        vector<int> sameColorVertices;
+
+                        stack<int> s;
+                        s.push(vertex2);
+                        s.push(vertex1);
+                        sameColorVertices.push_back(vertex1);
+                        sameColorVertices.push_back(vertex2);
+                        visited[vertex1] = true;
+                        visited[vertex2] = true;
+                        while(!s.empty())
+                        {
+                            int t = s.top();
+                            s.pop();
+                            for(int i1=0;i1<adjMatrix[t].size();i1++)
+                            {
+                                if(adjMatrix[t][i1]>0 && visited[i1]==false)
+                                {
+                                    if(colorAssigned[i1]==c1 || colorAssigned[i1]==c2)
+                                    {
+                                        s.push(i1);
+                                        sameColorVertices.push_back(i1);
+                                        visited[i1] = true;
+
+                                    }
+                                }
+                            }
+                        }
+
+                        for(auto &t : sameColorVertices)
+                        {
+                            if(colorAssigned[t]==c1)
+                            {
+                                colorAssigned[t] = c2;
+                            }
+                            else
+                            {
+                                colorAssigned[t] = c1;
+                            }
+                        }
+
+                        float newPenalty = countPenalty();
+                        //cout<<"newPenalty: "<<newPenalty<<endl;
+                        if(newPenalty>currentPenalty)
+                        {
+                            for(auto &t : sameColorVertices)
+                            {
+                                if(colorAssigned[t]==c1)
+                                {
+                                    colorAssigned[t] = c2;
+                                }
+                                else
+                                {
+                                    colorAssigned[t] = c1;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            currentPenalty = newPenalty;
+                        }
+                        
+
+
+                    }
+                }
+            }
+        }
+    };
+
+    function<void()> kempeChainInterchangeV3 = [&] () -> void 
+    {
+        vector<unordered_set<int>> neighbourColors(totalNode);
+        unordered_set<int> nonVisitedVertex;
+        for(int i=0;i<adjMatrix.size();i++)
+        {
+            nonVisitedVertex.insert(i);
+            unordered_set<int> &r = neighbourColors[i];
+            for(int j=0;j<adjMatrix[i].size();j++)
+            {
+                if(adjMatrix[i][j]>0)
+                {
+                    r.insert(colorAssigned[j]);
+                }
+            }
+        }
+        int iterationNumber = 0;
+        while(!nonVisitedVertex.empty()&&iterationNumber<100)
+        {
+            iterationNumber++;
+            cout<<iterationNumber<<endl;
+            
+            int vertex1 = *nonVisitedVertex.begin();
+            nonVisitedVertex.erase(vertex1);
+            int c1 = colorAssigned[vertex1];
+            unordered_set<int> &r = neighbourColors[vertex1];
+            
+            for(auto c2: r)
+            {
+                vector<int> chainVertex;
+                bool *visited = new bool[totalNode];
+                for(int i=0;i<totalNode;i++)
+                {
+                    visited[i] = false;
+                }
+                stack<int> s;
+                s.push(vertex1);
+                chainVertex.push_back(vertex1);
+                visited[vertex1] = true;
+                while(!s.empty())
+                {
+                    int cv = s.top();
+                    s.pop();
+                    for(int i=0;i<totalNode;i++)
+                    {
+                        if(adjMatrix[cv][i]>0 && visited[i]==false)
+                        {
+                            if(colorAssigned[i]==c1 || colorAssigned[i]==c2)
+                            {
+                                visited[i] = true;
+                                chainVertex.push_back(i);
+                                s.push(i);
+                            }
+                        }
+                    }
+
+                }
+
+                for(auto &t : chainVertex)
+                {
+                    if(colorAssigned[t]==c1)
+                    {
+                        colorAssigned[t] = c2;
+                    }
+                    else
+                    {
+                        colorAssigned[t] = c1;
+                    }
+                }
+
+                float newPenalty = countPenalty();
+                //cout<<"newPenalty: "<<newPenalty<<endl;
+                if(newPenalty>currentPenalty)
+                {
+                    for(auto &t : chainVertex)
+                    {
+                        if(colorAssigned[t]==c1)
+                        {
+                            colorAssigned[t] = c2;
+                        }
+                        else
+                        {
+                            colorAssigned[t] = c1;
+                        }
+                    }
+                }
+                else
+                {
+                    currentPenalty = newPenalty;
+                    for(auto &t: chainVertex)
+                    {
+                        nonVisitedVertex.erase(t);
+                    }
+                    break;
+
+
+                }
+
+
+            }
+        }
+        
+    };
+
+    kempeChainInterchangeV3();
     cout<<"after kempe chain interchange new penalty: "<<currentPenalty<<endl;
     //cout<<"bye1"<<endl;
     
@@ -445,7 +653,7 @@ int main()
             colorAssigned[courseNumber] = currentColor;
             currentColor += targetNode;
         }
-        //totalColorSoFar = 0;
+        
         unordered_map<int,int> degree;
         for(int i=0;i<adjMatrix.size();i++)
         {
@@ -553,7 +761,8 @@ int main()
         cout<<totalColorSoFar<<endl;
 
     };
-    DSaturSWO();
+    DSaturSWO();        
+    kempeChainInterchangeV3();
     float currentPenaltyAfterSwo = countPenalty();
     cout<<"after desaturSWO new penalty: "<<currentPenaltyAfterSwo<<endl;
     cout<<"bye1"<<endl;
