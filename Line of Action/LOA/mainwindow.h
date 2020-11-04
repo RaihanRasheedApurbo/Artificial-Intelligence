@@ -21,6 +21,8 @@ private slots:
 
     void on_button1vs1_clicked();
 
+    void on_buttonVsCom_clicked();
+
 private:
     Ui::MainWindow *ui;
     Board *board;

@@ -1,14 +1,23 @@
-#include<QPushButton>
-#include<QString>
-class CustomButton : public QPushButton{
-public:
-    int rowNumber;
-    int colNumber;
-    QString blockColor;
-    CustomButton(int row, int col, QWidget *parent = 0):QPushButton(parent)
-    {
-        rowNumber = row;
-        colNumber = col;
-    }
+#include "CustomButton.h"
 
-};
+CustomButton::CustomButton(int row, int col, QWidget *parent):QPushButton(parent)
+{
+    rowNumber = row;
+    colNumber = col;
+}
+
+void CustomButton::setRed()
+{
+
+    this->setColor(Qt::red);
+
+}
+
+void CustomButton::setColor(Qt::GlobalColor color)
+{
+    QPalette pal = this->palette();
+    pal.setColor(QPalette::Button, QColor(color));
+    this->setAutoFillBackground(true);
+    this->setPalette(pal);
+    this->update();
+}

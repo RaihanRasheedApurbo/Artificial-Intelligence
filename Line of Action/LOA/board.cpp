@@ -1,15 +1,12 @@
 #include "board.h"
 #include "ui_board.h"
-#include <QPushButton>
-#include <QVector>
-#include <QLabel>
-#include <string>
-#include <bits/stdc++.h>
-using namespace std;
-Board::Board(int len, QWidget *parent) :
+
+
+Board::Board(int len, bool vsCom, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::Board)
 {
+    this->vsCom = vsCom;
     ui->setupUi(this);
     //qDebug()<<len;
 
@@ -40,25 +37,28 @@ Board::Board(int len, QWidget *parent) :
             buttonA->setFont(font);
             t.append(buttonA);
 
-            QPalette pal = buttonA->palette();
             if(white)
             {
-                pal.setColor(QPalette::Button, QColor(Qt::white));
+                buttonA->setColor(Qt::white);
                 buttonA->blockColor = "white";
                 white = false;
             }
             else
             {
-                pal.setColor(QPalette::Button, QColor(Qt::yellow));
+                buttonA->setColor(Qt::yellow);
                 buttonA->blockColor = "yellow";
                 white = true;
             }
 
 
-            buttonA->setAutoFillBackground(true);
-            buttonA->setPalette(pal);
-            buttonA->update();
-            connect(buttonA,SIGNAL(clicked()),this,SLOT(handleClick()));
+            if(vsCom == true)
+            {
+                connect(buttonA,SIGNAL(clicked()),this,SLOT(handleClickVsCom()));
+            }
+            else
+            {
+                connect(buttonA,SIGNAL(clicked()),this,SLOT(handleClick()));
+            }
 
             t1.push_back(0);
 
@@ -87,13 +87,14 @@ Board::Board(int len, QWidget *parent) :
     }
 
     statusLabel = new QLabel(this);
-    //label->setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    //label->setText("f");
-    //label->setAlignment(Qt::AlignBottom | Qt::AlignRight);
     statusLabel->move(625,550);
 
     boardLabel = new QLabel(this);
     boardLabel->move(625,35);
+
+    moveLabel = new QLabel(this);
+    moveLabel->move(625,300);
+    moveLabel->setText("hi");
 
 
 
@@ -118,20 +119,8 @@ Board::~Board()
 
 void Board::handleClick()
 {
-    //QObject *t = sender();
-    CustomButton *t1 = (CustomButton *) sender();
 
-//    qDebug()<<"inside handle click";
-//    qDebug()<<t1->text();
-//    qDebug()<<t1->rowNumber<<t1->colNumber;
-//    qDebug()<<t1->colNumber;
-//    std::string s = std::to_string(5);
-//    qDebug()<<QString::fromStdString(s);
-//    std::string s;
-//    s = std::to_string(turn);
-//    qDebug()<<turn;
-//    s = std::to_string(selected);
-//    qDebug()<<selected;
+    CustomButton *t1 = (CustomButton *) sender();
 
     if(turn == 1 && selected == 0)
     {
@@ -140,96 +129,94 @@ void Board::handleClick()
             selected = 1;
             selectedX = t1->rowNumber;
             selectedY = t1->colNumber;
-            QPalette pal = t1->palette();
-            pal.setColor(QPalette::Button, QColor(Qt::red));
-            t1->setAutoFillBackground(true);
-            t1->setPalette(pal);
-            t1->update();
+            t1->setRed();
+
             findNextMove();
-            //markNextMOve();
+            colorNextMovePlaces();
 
         }
     }
     else if(turn == 1 && selected == 1)
     {
+
+
         if(selectedX == t1->rowNumber && selectedY == t1->colNumber) // selected the same block again so discard selection
         {
             selected = 0;
             selectedX = -5;
             selectedY = -5;
-            QPalette pal = t1->palette();
+
             if(t1->blockColor == "white")
             {
-                pal.setColor(QPalette::Button, QColor(Qt::white));
+                t1->setColor(Qt::white);
             }
             else
             {
-                pal.setColor(QPalette::Button, QColor(Qt::yellow));
+                t1->setColor(Qt::yellow);
             }
 
-            t1->setAutoFillBackground(true);
-            t1->setPalette(pal);
-            t1->update();
+
+            undoColorNextMovePlaces();
+            moveLabel->setText("");
+
         }
-        else if(t1->text() == "O") // can't go here because same team's piece exist in this block
+        else if(nextMove(t1))
         {
-            // doing nothing
+            if(t1->text()=="O")
+            {
+                //doing nothing kept here for case analysis
+            }
+            else if(t1->text()== "" || t1->text() == "X") // empty place or opponent piece
+            {
+                moveLabel->setText("");
+                undoColorNextMovePlaces();
+                if(t1->text()=="X")
+                {
+                    player2Pieces--;
+                }
+                t1->setText("O");
+
+
+                boardMatrix[selectedX][selectedY] = 0;
+                boardMatrix[t1->rowNumber][t1->colNumber] = 1;
+
+                CustomButton* t2 = buttons[selectedX][selectedY];
+                t2->setText("");
+
+                if(t2->blockColor == "white")
+                {
+                    t2->setColor(Qt::white);
+                }
+                else
+                {
+                    t2->setColor(Qt::yellow);
+                }
+
+
+
+                bool over = checkGameOver();
+
+                if(over==false)
+                {
+                    turn = 2;
+
+                }
+                else
+                {
+                    turn = 0;
+                }
+
+                selected = 0;
+                selectedX = -5;
+                selectedY = -5;
+
+
+
+
+            }
         }
-        else if(t1->text()== "" || t1->text() == "X") // empty place or opponent piece
-        {
-
-            if(t1->text()=="X")
-            {
-                player2Pieces--;
-            }
-            t1->setText("O");
-
-            CustomButton* t2 = buttons[selectedX][selectedY];
-            t2->setText("");
-
-            boardMatrix[selectedX][selectedY] = 0;
-            boardMatrix[t1->rowNumber][t1->colNumber] = 1;
 
 
-
-            QPalette pal = t2->palette();
-            if(t2->blockColor == "white")
-            {
-                pal.setColor(QPalette::Button, QColor(Qt::white));
-            }
-            else
-            {
-                pal.setColor(QPalette::Button, QColor(Qt::yellow));
-            }
-
-            t2->setAutoFillBackground(true);
-            t2->setPalette(pal);
-            t2->update();
-
-
-
-
-
-            bool over = checkGameOver();
-
-            if(over==false)
-            {
-                turn = 2;
-
-            }
-            else
-            {
-                turn = 0;
-            }
-
-            selected = 0;
-            selectedX = -5;
-            selectedY = -5;
-
-
-
-
-        }
     }
     else if(turn == 2 && selected == 0)
     {
@@ -238,12 +225,12 @@ void Board::handleClick()
             selected = 1;
             selectedX = t1->rowNumber;
             selectedY = t1->colNumber;
-            QPalette pal = t1->palette();
-            pal.setColor(QPalette::Button, QColor(Qt::red));
-            t1->setAutoFillBackground(true);
-            t1->setPalette(pal);
-            t1->update();
+            t1->setRed();
             findNextMove();
+            //qDebug()<<"hi at line 260 its okay";
+            colorNextMovePlaces();
+            //qDebug()<<"hi at line 262 its okay";
+
 
 
 
@@ -251,89 +238,286 @@ void Board::handleClick()
     }
     else if(turn == 2 && selected == 1)
     {
+
         if(selectedX == t1->rowNumber && selectedY == t1->colNumber) // selected the same block again so discard selection
         {
             selected = 0;
             selectedX = -5;
             selectedY = -5;
-            QPalette pal = t1->palette();
             if(t1->blockColor == "white")
             {
-                pal.setColor(QPalette::Button, QColor(Qt::white));
+                t1->setColor(Qt::white);
             }
             else
             {
-                pal.setColor(QPalette::Button, QColor(Qt::yellow));
+                t1->setColor(Qt::yellow);
             }
-
-            t1->setAutoFillBackground(true);
-            t1->setPalette(pal);
-            t1->update();
+            undoColorNextMovePlaces();
         }
-        else if(t1->text() == "X") // can't go here because same team's piece exist in this block
-        {
-            // doing nothing
-        }
-        else if(t1->text()== "" || t1->text() == "O") // empty place or opponent piece
+        else if(nextMove(t1))
         {
 
-            if(t1->text()=="O")
+            if(t1->text() == "X") // can't go here because same team's piece exist in this block
             {
-                player1Pieces--;
+                // doing nothing kept here for case analysis
             }
-            t1->setText("X");
-
-            CustomButton* t2 = buttons[selectedX][selectedY];
-            if(t2->text()=="O")
+            else if(t1->text()== "" || t1->text() == "O") // empty place or opponent piece
             {
-                player1Pieces--;
+                undoColorNextMovePlaces(); // changing possible moves buttons to normal color
+                if(t1->text()=="O")
+                {
+                    player1Pieces--;
+                }
+                t1->setText("X");
+
+                CustomButton* t2 = buttons[selectedX][selectedY];
+                t2->setText("");
+                boardMatrix[selectedX][selectedY] = 0;
+                boardMatrix[t1->rowNumber][t1->colNumber] = 2;
+
+
+                if(t2->blockColor == "white")
+                {
+                    t2->setColor(Qt::white);
+                }
+                else
+                {
+                    t2->setColor(Qt::yellow);
+                }
+
+
+
+
+                bool over = checkGameOver();
+
+                if(over==false)
+                {
+                    turn = 1;
+
+                }
+                else
+                {
+                    turn = 0;
+                }
+
+                selected = 0;
+                selectedX = -5;
+                selectedY = -5;
+
+
+
             }
-            t2->setText("");
-            boardMatrix[selectedX][selectedY] = 0;
-            boardMatrix[t1->rowNumber][t1->colNumber] = 2;
-
-
-            QPalette pal = t2->palette();
-            if(t2->blockColor == "white")
-            {
-                pal.setColor(QPalette::Button, QColor(Qt::white));
-            }
-            else
-            {
-                pal.setColor(QPalette::Button, QColor(Qt::yellow));
-            }
-
-            t2->setAutoFillBackground(true);
-            t2->setPalette(pal);
-            t2->update();
-
-
-
-
-            bool over = checkGameOver();
-
-            if(over==false)
-            {
-                turn = 1;
-
-            }
-            else
-            {
-                turn = 0;
-            }
-
-            selected = 0;
-            selectedX = -5;
-            selectedY = -5;
-
-
-
         }
+
     }
 
     printLabels();
 
 
+}
+
+void Board::handleClickVsCom()
+{
+    //qDebug()<<"inside vsCom";
+
+    CustomButton *t1 = (CustomButton *) sender();
+
+    if(turn == 1 && selected == 0)
+    {
+        if(t1->text()=="O")
+        {
+            selected = 1;
+            selectedX = t1->rowNumber;
+            selectedY = t1->colNumber;
+            t1->setRed();
+
+            findNextMove();
+            colorNextMovePlaces();
+
+        }
+    }
+    else if(turn == 1 && selected == 1)
+    {
+
+
+        if(selectedX == t1->rowNumber && selectedY == t1->colNumber) // selected the same block again so discard selection
+        {
+            selected = 0;
+            selectedX = -5;
+            selectedY = -5;
+
+            if(t1->blockColor == "white")
+            {
+                t1->setColor(Qt::white);
+            }
+            else
+            {
+                t1->setColor(Qt::yellow);
+            }
+
+
+            undoColorNextMovePlaces();
+            moveLabel->setText("");
+
+        }
+        else if(nextMove(t1))
+        {
+            if(t1->text()=="O")
+            {
+                //doing nothing kept here for case analysis
+            }
+            else if(t1->text()== "" || t1->text() == "X") // empty place or opponent piece
+            {
+                moveLabel->setText("");
+                undoColorNextMovePlaces();
+                if(t1->text()=="X")
+                {
+                    player2Pieces--;
+                }
+                t1->setText("O");
+
+
+                boardMatrix[selectedX][selectedY] = 0;
+                boardMatrix[t1->rowNumber][t1->colNumber] = 1;
+
+                CustomButton* t2 = buttons[selectedX][selectedY];
+                t2->setText("");
+
+                if(t2->blockColor == "white")
+                {
+                    t2->setColor(Qt::white);
+                }
+                else
+                {
+                    t2->setColor(Qt::yellow);
+                }
+
+
+
+                bool over = checkGameOver();
+
+                if(over==false)
+                {
+                    turn = 2;
+
+                }
+                else
+                {
+                    turn = 0;
+                }
+
+                selected = 0;
+                selectedX = -5;
+                selectedY = -5;
+
+                spinAI();
+
+
+
+
+
+            }
+        }
+
+
+    }
+    else if(turn == 2 && selected == 0)
+    {
+        qDebug()<<"clicked";
+        if(t1->text()=="X")
+        {
+            selected = 1;
+            selectedX = t1->rowNumber;
+            selectedY = t1->colNumber;
+            t1->setRed();
+            findNextMove();
+            //qDebug()<<"hi at line 260 its okay";
+            colorNextMovePlaces();
+            //qDebug()<<"hi at line 262 its okay";
+
+
+
+
+        }
+    }
+    else if(turn == 2 && selected == 1)
+    {
+
+        if(selectedX == t1->rowNumber && selectedY == t1->colNumber) // selected the same block again so discard selection
+        {
+            selected = 0;
+            selectedX = -5;
+            selectedY = -5;
+            if(t1->blockColor == "white")
+            {
+                t1->setColor(Qt::white);
+            }
+            else
+            {
+                t1->setColor(Qt::yellow);
+            }
+            undoColorNextMovePlaces();
+        }
+        else if(nextMove(t1))
+        {
+
+            if(t1->text() == "X") // can't go here because same team's piece exist in this block
+            {
+                // doing nothing kept here for case analysis
+            }
+            else if(t1->text()== "" || t1->text() == "O") // empty place or opponent piece
+            {
+                undoColorNextMovePlaces(); // changing possible moves buttons to normal color
+                if(t1->text()=="O")
+                {
+                    player1Pieces--;
+                }
+                t1->setText("X");
+
+                CustomButton* t2 = buttons[selectedX][selectedY];
+                t2->setText("");
+                boardMatrix[selectedX][selectedY] = 0;
+                boardMatrix[t1->rowNumber][t1->colNumber] = 2;
+
+
+                if(t2->blockColor == "white")
+                {
+                    t2->setColor(Qt::white);
+                }
+                else
+                {
+                    t2->setColor(Qt::yellow);
+                }
+
+
+
+
+                bool over = checkGameOver();
+
+                if(over==false)
+                {
+                    turn = 1;
+
+                }
+                else
+                {
+                    turn = 0;
+                }
+
+                selected = 0;
+                selectedX = -5;
+                selectedY = -5;
+
+
+
+
+
+            }
+        }
+
+    }
+
+    printLabels();
 }
 
 void Board::printLabels()
@@ -527,7 +711,6 @@ void Board::findNextMove()
         }
     }
     QString s = "sameRowCount: " + QString::number(sameRowCount) + " \n";
-
     //checking any opposite piece is in between or not
     bool right = true;
     for(int i=1;i<sameRowCount;i++)
@@ -537,7 +720,7 @@ void Board::findNextMove()
             right = false;
             break;
         }
-        if(selected==1)
+        if(turn==1)
         {
             if(boardMatrix[selectedX][selectedY+i] == 2)
             {
@@ -568,7 +751,7 @@ void Board::findNextMove()
             left = false;
             break;
         }
-        if(selected==1)
+        if(turn==1)
         {
             if(boardMatrix[selectedX][selectedY-i] == 2)
             {
@@ -602,14 +785,14 @@ void Board::findNextMove()
     s += "sameColumnCount: " + QString::number(sameColumnCount) + "\n";
 
     bool down = true;
-    for(int i=1;i<sameRowCount;i++)
+    for(int i=1;i<sameColumnCount;i++)
     {
         if(selectedX+i>=len)
         {
             down = false;
             break;
         }
-        if(selected==1)
+        if(turn==1)
         {
             if(boardMatrix[selectedX+i][selectedY] == 2)
             {
@@ -633,14 +816,14 @@ void Board::findNextMove()
     }
 
     bool up = true;
-    for(int i=1;i<sameRowCount;i++)
+    for(int i=1;i<sameColumnCount;i++)
     {
         if(selectedX-i<0)
         {
             up = false;
             break;
         }
-        if(selected==1)
+        if(turn==1)
         {
             if(boardMatrix[selectedX-i][selectedY] == 2)
             {
@@ -663,7 +846,10 @@ void Board::findNextMove()
         s += "up move: " + QString::number(selectedX-sameColumnCount) + "," + QString::number(selectedY) + " \n";
     }
 
-    qDebug().noquote()<<s;
+
+
+
+
 
 //    QLabel *testLabel = new QLabel(this);
 //    //label->setFrameStyle(QFrame::Panel | QFrame::Sunken);
@@ -672,8 +858,8 @@ void Board::findNextMove()
 //    testLabel->move(625,450);
 //    testLabel->setText(QString::fromStdString(s));
 
-    // finding one side of diagonal
-    /*int d = min(selectedX,selectedY);
+    // finding left diagonal
+    int d = min(selectedX,selectedY);
     int startX = selectedX-d;
     int startY = selectedY-d;
     int leftDiagonalCount = 0;
@@ -686,11 +872,261 @@ void Board::findNextMove()
 
         startX++;
         startY++;
-    }*/
+    }
+    s += "leftDiagonalCount: " + QString::number(leftDiagonalCount) + "\n";
+
+    bool topLeft = true;
+    for(int i=1;i<leftDiagonalCount;i++)
+    {
+        if(selectedX-i<0 || selectedY-i<0)
+        {
+            topLeft = false;
+            break;
+        }
+        if(turn==1)
+        {
+            if(boardMatrix[selectedX-i][selectedY-i] == 2)
+            {
+                topLeft = false;
+                break;
+            }
+        }
+        else
+        {
+            if(boardMatrix[selectedX-i][selectedY-i] == 1)
+            {
+                topLeft = false;
+                break;
+            }
+        }
+    }
+    if(topLeft == true && (selectedX-leftDiagonalCount)>=0 && (selectedY-leftDiagonalCount)>=0)
+    {
+        nextMoves.insert(make_pair(selectedX-leftDiagonalCount,selectedY-leftDiagonalCount));
+        s += "topLeft move: " + QString::number(selectedX-leftDiagonalCount) + "," + QString::number(selectedY-leftDiagonalCount) + " \n";
+    }
+
+
+    bool bottomRight = true;
+    for(int i=1;i<leftDiagonalCount;i++)
+    {
+        if(selectedX+i>=len || selectedY+i>=len)
+        {
+            bottomRight = false;
+            break;
+        }
+        if(turn==1)
+        {
+            if(boardMatrix[selectedX+i][selectedY+i] == 2)
+            {
+                bottomRight = false;
+                break;
+            }
+        }
+        else
+        {
+            if(boardMatrix[selectedX+i][selectedY+i] == 1)
+            {
+                bottomRight = false;
+                break;
+            }
+        }
+    }
+    if(bottomRight == true && (selectedX+leftDiagonalCount)<len && (selectedY+leftDiagonalCount)<len)
+    {
+        nextMoves.insert(make_pair(selectedX+leftDiagonalCount,selectedY+leftDiagonalCount));
+        s += "bottomRight move: " + QString::number(selectedX+leftDiagonalCount) + "," + QString::number(selectedY+leftDiagonalCount) + " \n";
+    }
+
+
+    //finding right diagonal diiferent from left diagonal at first finding left down corner of the diagonal
+    int currentCellX = selectedX;
+    int currentCellY = selectedY;
+    while(true)
+    {
+        if(currentCellX+1>=len || currentCellY-1<0)
+        {
+            break;
+        }
+        currentCellX++;
+        currentCellY--;
+    }
+
+    startX = currentCellX;
+    startY = currentCellY;
+    int rightDiagonalCount = 0;
+    while(startX>=0 && startY<len)
+    {
+        if(boardMatrix[startX][startY] == 1 || boardMatrix[startX][startY] == 2)
+        {
+            rightDiagonalCount++;
+        }
+
+        startX--;
+        startY++;
+    }
+    s += "rightDiagonalCount: " + QString::number(rightDiagonalCount) + "\n";
+
+    bool topRight = true;
+    for(int i=1;i<rightDiagonalCount;i++)
+    {
+        if(selectedX-i<0 || selectedY+i>=len)
+        {
+            topRight = false;
+            break;
+        }
+        if(turn==1)
+        {
+            if(boardMatrix[selectedX-i][selectedY+i] == 2)
+            {
+                topRight = false;
+                break;
+            }
+        }
+        else
+        {
+            if(boardMatrix[selectedX-i][selectedY+i] == 1)
+            {
+                topRight = false;
+                break;
+            }
+        }
+    }
+    if(topRight == true && (selectedX-rightDiagonalCount)>=0 && (selectedY+rightDiagonalCount)<len)
+    {
+        nextMoves.insert(make_pair(selectedX-rightDiagonalCount,selectedY+rightDiagonalCount));
+        s += "topRight move: " + QString::number(selectedX-rightDiagonalCount) + "," + QString::number(selectedY+rightDiagonalCount) + " \n";
+    }
+
+    bool bottomLeft = true;
+    for(int i=1;i<rightDiagonalCount;i++)
+    {
+        if(selectedX+i>=len || selectedY-i<0)
+        {
+            bottomLeft = false;
+            break;
+        }
+        if(turn==1)
+        {
+            if(boardMatrix[selectedX+i][selectedY-i] == 2)
+            {
+                bottomLeft = false;
+                break;
+            }
+        }
+        else
+        {
+            if(boardMatrix[selectedX+i][selectedY-i] == 1)
+            {
+                bottomLeft = false;
+                break;
+            }
+        }
+    }
+    if(bottomLeft == true && (selectedX+rightDiagonalCount)<len && (selectedY-rightDiagonalCount)>=0)
+    {
+        nextMoves.insert(make_pair(selectedX+rightDiagonalCount,selectedY-rightDiagonalCount));
+        s += "bottomLeft move: " + QString::number(selectedX+rightDiagonalCount) + "," + QString::number(selectedY-rightDiagonalCount) +" \n";
+    }
+
+    moveLabel->setText(s);
+    qDebug()<<s;
 
 
 
 
+}
+
+void Board::colorNextMovePlaces()
+{
+
+    for(auto &t : nextMoves)
+    {
+        int x = t.first;
+        int y = t.second;
+        qDebug()<<x<<" "<<y;
+        if(turn==1)
+        {
+            if(boardMatrix[x][y]==1)
+            {
+                // doing nothing... kept here for case analysis
+                // not erasing because it creates problem in set iterator pointer
+            }
+            else
+            {
+
+                CustomButton *t1 = buttons[x][y];
+                t1->setRed();
+            }
+        }
+        else
+        {
+            if(boardMatrix[x][y]==2)
+            {
+                //doing nothing... kept here for case analysis
+            }
+            else
+            {
+                CustomButton *t1 = buttons[x][y];
+                t1->setRed();
+            }
+        }
+    }
+
+}
+
+void Board::undoColorNextMovePlaces()
+{
+
+
+    for(auto &t : nextMoves)
+    {
+        int x = t.first;
+        int y = t.second;
+
+        CustomButton *t1 = buttons[x][y];
+
+        if(t1->blockColor == "white")
+        {
+            t1->setColor(Qt::white);
+        }
+        else
+        {
+            t1->setColor(Qt::yellow);
+        }
+
+
+
+
+    }
+}
+
+void Board::spinAI()
+{
+    int len = boardMatrix.size();
+    bool done = false;
+    for(int i=0;i<len;i++)
+    {
+        if(done == true)
+        {
+            break;
+        }
+        for(int j=0;j<len;j++)
+        {
+            if(boardMatrix[i][j]==2)
+            {
+                buttons[i][j]->clicked();
+
+            }
+        }
+    }
+}
+
+bool Board::nextMove(CustomButton *selectedMove)
+{
+    pair<int,int> p = make_pair(selectedMove->rowNumber,selectedMove->colNumber);
+
+    return (nextMoves.find(p) != nextMoves.end());
 }
 
 bool Board::checkGameOver()

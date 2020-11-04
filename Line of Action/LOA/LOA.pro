@@ -15,6 +15,7 @@ SOURCES += \
     mainwindow.cpp
 
 HEADERS += \
+    CustomButton.h \
     board.h \
     mainwindow.h
 

@@ -22,7 +22,16 @@ void MainWindow::on_button1vs1_clicked()
 
     hide();
     int boardLength = 8;
-    board = new Board(boardLength,this);
+    board = new Board(boardLength,false,this);
+    board->show();
+
+}
+
+void MainWindow::on_buttonVsCom_clicked()
+{
+    hide();
+    int boardLength = 8;
+    board = new Board(boardLength,true,this);
     board->show();
 
 }
