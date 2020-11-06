@@ -92,9 +92,11 @@ Board::Board(int len, bool vsCom, QWidget *parent) :
     boardLabel = new QLabel(this);
     boardLabel->move(625,35);
 
-    moveLabel = new QLabel(this);
-    moveLabel->move(625,300);
-    moveLabel->setText("hi");
+    heuristicLabel = new QLabel(this);
+    heuristicLabel->move(625,230);
+    heuristicLabel->setText("hi");
+    heuristicLabel->setFixedSize(300,300);
+
 
 
 
@@ -157,7 +159,7 @@ void Board::handleClick()
 
 
             undoColorNextMovePlaces();
-            moveLabel->setText("");
+            //moveLabel->setText("");
 
         }
         else if(nextMove(t1))
@@ -168,7 +170,7 @@ void Board::handleClick()
             }
             else if(t1->text()== "" || t1->text() == "X") // empty place or opponent piece
             {
-                moveLabel->setText("");
+                //moveLabel->setText("");
                 undoColorNextMovePlaces();
                 if(t1->text()=="X")
                 {
@@ -303,6 +305,10 @@ void Board::handleClick()
                 selected = 0;
                 selectedX = -5;
                 selectedY = -5;
+                QString s1 = AI::heuristicStr(boardMatrix,1);
+                QString s2 = AI::heuristicStr(boardMatrix,2);
+
+                heuristicLabel->setText(s1+"\n"+s2);
 
 
 
@@ -357,7 +363,7 @@ void Board::handleClickVsCom()
 
 
             undoColorNextMovePlaces();
-            moveLabel->setText("");
+            //moveLabel->setText("");
 
         }
         else if(nextMove(t1))
@@ -368,7 +374,7 @@ void Board::handleClickVsCom()
             }
             else if(t1->text()== "" || t1->text() == "X") // empty place or opponent piece
             {
-                moveLabel->setText("");
+                //moveLabel->setText("");
                 undoColorNextMovePlaces();
                 if(t1->text()=="X")
                 {
@@ -404,6 +410,10 @@ void Board::handleClickVsCom()
                 {
                     turn = 2;
                     spinAI();
+                    QString s1 = AI::heuristicStr(boardMatrix,1);
+                    QString s2 = AI::heuristicStr(boardMatrix,2);
+
+                    heuristicLabel->setText(s1+"\n"+s2);
                 }
                 else
                 {
@@ -728,7 +738,7 @@ void Board::findNextMove()
             sameRowCount++;
         }
     }
-    QString s = "sameRowCount: " + QString::number(sameRowCount) + " \n";
+    //QString s = "sameRowCount: " + QString::number(sameRowCount) + " \n";
     //checking any opposite piece is in between or not
     bool right = true;
     for(int i=1;i<sameRowCount;i++)
@@ -758,7 +768,7 @@ void Board::findNextMove()
     if(right == true && (selectedY+sameRowCount)<len)
     {
         nextMoves.insert(make_pair(selectedX,selectedY+sameRowCount));
-        s += "right move: " + QString::number(selectedX) + "," + QString::number(selectedY+sameRowCount) + " \n";
+        //s += "right move: " + QString::number(selectedX) + "," + QString::number(selectedY+sameRowCount) + " \n";
     }
 
     bool left = true;
@@ -789,7 +799,7 @@ void Board::findNextMove()
     if(left == true && (selectedY-sameRowCount)>=0)
     {
         nextMoves.insert(make_pair(selectedX,selectedY-sameRowCount));
-        s += "left move: " + QString::number(selectedX) + "," + QString::number(selectedY-sameRowCount) + " \n";
+        //s += "left move: " + QString::number(selectedX) + "," + QString::number(selectedY-sameRowCount) + " \n";
     }
 
     int sameColumnCount = 0;
@@ -800,7 +810,7 @@ void Board::findNextMove()
             sameColumnCount++;
         }
     }
-    s += "sameColumnCount: " + QString::number(sameColumnCount) + "\n";
+    //s += "sameColumnCount: " + QString::number(sameColumnCount) + "\n";
 
     bool down = true;
     for(int i=1;i<sameColumnCount;i++)
@@ -830,7 +840,7 @@ void Board::findNextMove()
     if(down == true && (selectedX+sameColumnCount)<len)
     {
         nextMoves.insert(make_pair(selectedX+sameColumnCount,selectedY));
-        s += "down move: " + QString::number(selectedX+sameColumnCount) + "," + QString::number(selectedY) + " \n";
+        //s += "down move: " + QString::number(selectedX+sameColumnCount) + "," + QString::number(selectedY) + " \n";
     }
 
     bool up = true;
@@ -861,7 +871,7 @@ void Board::findNextMove()
     if(up == true && (selectedX-sameColumnCount)>=0)
     {
         nextMoves.insert(make_pair(selectedX-sameColumnCount,selectedY));
-        s += "up move: " + QString::number(selectedX-sameColumnCount) + "," + QString::number(selectedY) + " \n";
+        //s += "up move: " + QString::number(selectedX-sameColumnCount) + "," + QString::number(selectedY) + " \n";
     }
 
 
@@ -891,7 +901,7 @@ void Board::findNextMove()
         startX++;
         startY++;
     }
-    s += "leftDiagonalCount: " + QString::number(leftDiagonalCount) + "\n";
+    //s += "leftDiagonalCount: " + QString::number(leftDiagonalCount) + "\n";
 
     bool topLeft = true;
     for(int i=1;i<leftDiagonalCount;i++)
@@ -921,7 +931,7 @@ void Board::findNextMove()
     if(topLeft == true && (selectedX-leftDiagonalCount)>=0 && (selectedY-leftDiagonalCount)>=0)
     {
         nextMoves.insert(make_pair(selectedX-leftDiagonalCount,selectedY-leftDiagonalCount));
-        s += "topLeft move: " + QString::number(selectedX-leftDiagonalCount) + "," + QString::number(selectedY-leftDiagonalCount) + " \n";
+        //s += "topLeft move: " + QString::number(selectedX-leftDiagonalCount) + "," + QString::number(selectedY-leftDiagonalCount) + " \n";
     }
 
 
@@ -953,7 +963,7 @@ void Board::findNextMove()
     if(bottomRight == true && (selectedX+leftDiagonalCount)<len && (selectedY+leftDiagonalCount)<len)
     {
         nextMoves.insert(make_pair(selectedX+leftDiagonalCount,selectedY+leftDiagonalCount));
-        s += "bottomRight move: " + QString::number(selectedX+leftDiagonalCount) + "," + QString::number(selectedY+leftDiagonalCount) + " \n";
+        //s += "bottomRight move: " + QString::number(selectedX+leftDiagonalCount) + "," + QString::number(selectedY+leftDiagonalCount) + " \n";
     }
 
 
@@ -983,7 +993,7 @@ void Board::findNextMove()
         startX--;
         startY++;
     }
-    s += "rightDiagonalCount: " + QString::number(rightDiagonalCount) + "\n";
+    //s += "rightDiagonalCount: " + QString::number(rightDiagonalCount) + "\n";
 
     bool topRight = true;
     for(int i=1;i<rightDiagonalCount;i++)
@@ -1013,7 +1023,7 @@ void Board::findNextMove()
     if(topRight == true && (selectedX-rightDiagonalCount)>=0 && (selectedY+rightDiagonalCount)<len)
     {
         nextMoves.insert(make_pair(selectedX-rightDiagonalCount,selectedY+rightDiagonalCount));
-        s += "topRight move: " + QString::number(selectedX-rightDiagonalCount) + "," + QString::number(selectedY+rightDiagonalCount) + " \n";
+        //s += "topRight move: " + QString::number(selectedX-rightDiagonalCount) + "," + QString::number(selectedY+rightDiagonalCount) + " \n";
     }
 
     bool bottomLeft = true;
@@ -1044,11 +1054,11 @@ void Board::findNextMove()
     if(bottomLeft == true && (selectedX+rightDiagonalCount)<len && (selectedY-rightDiagonalCount)>=0)
     {
         nextMoves.insert(make_pair(selectedX+rightDiagonalCount,selectedY-rightDiagonalCount));
-        s += "bottomLeft move: " + QString::number(selectedX+rightDiagonalCount) + "," + QString::number(selectedY-rightDiagonalCount) +" \n";
+        //s += "bottomLeft move: " + QString::number(selectedX+rightDiagonalCount) + "," + QString::number(selectedY-rightDiagonalCount) +" \n";
     }
 
-    moveLabel->setText(s);
-    qDebug()<<s;
+    //moveLabel->setText(s);
+    //qDebug()<<s;
 
 
 
@@ -1062,7 +1072,7 @@ void Board::colorNextMovePlaces()
     {
         int x = t.first;
         int y = t.second;
-        qDebug()<<x<<" "<<y;
+        //qDebug()<<x<<" "<<y;
         if(turn==1)
         {
             if(boardMatrix[x][y]==1)

@@ -3,6 +3,7 @@ Move AI::currentBestMove(0,0,0,0);
 Move AI::bestMove(0,0,0,0);
 int AI::count = 0;
 int AI::prunedCount = 0;
+vector<vector<int>> AI::prevBoard;
 AI::AI()
 {
 
@@ -91,10 +92,83 @@ float AI::connectedness(vector<vector<int> > &boardMatrix, int playerNumber)
 
 }
 
+float AI::quad(vector<vector<int> > &boardMatrix, int playerNumber)
+{
+    int len = boardMatrix.size();
+    float count = 0;
+    for(int i=0;i<len;i++)
+    {
+        for(int j=0;j<len;j++)
+        {
+            if(j+1<len&&i+1<len)
+            {
+                int c = 0;
+                if(boardMatrix[i][j]==playerNumber)
+                {
+                    c++;
+                }
+                if(boardMatrix[i][j+1]==playerNumber)
+                {
+                    c++;
+                }
+                if(boardMatrix[i+1][j]==playerNumber)
+                {
+                    c++;
+                }
+                if(boardMatrix[i+1][j+1]==playerNumber)
+                {
+                    c++;
+                }
+                if(c==3)
+                {
+                    count+=75;
+                }
+                if(c==4)
+                {
+                    count+=100;
+                }
+            }
+        }
+    }
+    return count;
+
+}
+
+float AI::placement(vector<vector<int> > &boardMatrix, int playerNumber)
+{
+    float placementScore = 0;
+    int len = boardMatrix.size();
+    int count = 0;
+    for(int i=0;i<len;i++)
+    {
+        for(int j=0;j<len;j++)
+        {
+            if(boardMatrix[i][j]==playerNumber)
+            {
+                count++;
+                if(i==0||j==0||i==len-1||j==len-1)//first outer box
+                {
+                    placementScore += 25;
+                }
+                else if(i==1||j==1||i==len-2||j==len-2)//second outer box
+                {
+                    placementScore += 50;
+                }
+                else//inner box
+                {
+                    placementScore += 100;
+                }
+            }
+        }
+    }
+    return placementScore/count;
+}
+
 Move AI::alphaBetaSearch(vector<vector<int> > &boardMatrix,int d,int turn)
 {
     float alpha = -500;
     float beta = 500;
+    prevBoard = boardMatrix;
     maxValue(boardMatrix,alpha,beta,0,d,turn,turn);
     return currentBestMove;
 }
@@ -125,7 +199,11 @@ float AI::maxValue(vector<vector<int> > &boardMatrix, float a, float b, int cd, 
         if(v<=t)
         {
             v = t;
-            currentBestMove = possibleMoves[i];
+            if(cd==0)
+            {
+                currentBestMove = possibleMoves[i];
+            }
+
         }
         possibleMoves[i].undoMoveInMatrix(boardMatrix);
         if(v>=b)
@@ -192,14 +270,173 @@ float AI::heuristicValue(vector<vector<int> > &boardMatrix, int turn)
     {
         opponentTurn = 1;
     }
-    pair<float,float> p = centerOfMass(boardMatrix,myTurn);
-    float den = density(boardMatrix,p,myTurn);
-    float scale = 500;
-    den = min(den*100,scale); // scalling in 500 range
+
+    pair<float,float> p1 = centerOfMass(boardMatrix,myTurn);
+    float den = density(boardMatrix,p1,myTurn);
     float con = connectedness(boardMatrix,myTurn);
+    float qu = quad(boardMatrix,myTurn);
+    float po = placement(boardMatrix,myTurn);
+
+    if(con>=99)// if all are connected then sending maximum value so that this move is choesen
+    {
+        return 500;
+    }
+
+    // calculating previous stats this would be used to calculate mobility
+    //pair<float,float> p2 = centerOfMass(prevBoard,opponentTurn);
+    //float den2 = density(prevBoard,p2,opponentTurn);
+    float con2 = connectedness(prevBoard,opponentTurn);
+    //float qu2 = quad(prevBoard,opponentTurn);
+    float po2 = placement(prevBoard,opponentTurn);
+
+    // calculating current board stats for opponent
+
+    //pair<float,float> p3 = centerOfMass(boardMatrix,opponentTurn);
+    //float den3 = density(boardMatrix,p2,opponentTurn);
+    float con3 = connectedness(boardMatrix,opponentTurn);
+    //float qu3 = quad(boardMatrix,opponentTurn);
+    float po3 = placement(boardMatrix,opponentTurn);
+
+
+
+    //calculating mobility
+    float mobility = 0;
+    if(con2-con3>=10)
+    {
+        mobility += 250;
+    }
+    if(po2-po3>=10)
+    {
+        mobility += 250;
+    }
+
+    // scaling everything in range of 500
+    float scale = 500;
+    den = den-0.2; // offsetting .2 because worst case value is around .2
+    den = min(den*200,scale); // scalling in 500 range
     con = con*5; // con's maximum value 100 so getting in 500 range
-    return (.9*den+.1*con); // taking equal share on range of 500
+    po = po*5;
+    //mobility and quad are already in 500 range
+    // co efficient initilization for average case
+    float a1 = 0.1; // density is not so important
+    float a2 = 0.50; // connection is very important
+    float a3 = 0.1; // quad is not important as well
+    float a4 = 0.30; // position is super important at beggining
+    float a5 = 0; // depends
+    float result = 0;
+
+    if(po<300) // position is utmost priority in the begining
+    {
+        a2 = 0.10;
+        a4 = 0.70;
+    }
+    if(mobility>=100)
+    {
+        // incorporating mobility for attacking adversary
+        a1 = 0;
+        a2 = 0.20;
+        a3 = 0;
+        a4 = 0.30;
+        a5 = 0.60;
+    }
+
+
+    result = a1*den+a2*con+a3*qu+a4*po+a5*mobility;
+
+    return result;
 }
+// it was working fine so keeping one copy....
+//float AI::heuristicValue(vector<vector<int> > &boardMatrix, int turn)
+//{
+//    count++;
+//    //qDebug()<<count;
+//    int myTurn = turn;
+//    int opponentTurn = 0;
+//    if(myTurn == 1 )
+//    {
+//        opponentTurn = 2;
+//    }
+//    else
+//    {
+//        opponentTurn = 1;
+//    }
+
+//    pair<float,float> p1 = centerOfMass(boardMatrix,myTurn);
+//    float den = density(boardMatrix,p1,myTurn);
+//    float con = connectedness(boardMatrix,myTurn);
+//    float qu = quad(boardMatrix,myTurn);
+//    float po = placement(boardMatrix,myTurn);
+
+//    if(con>=99)// if all are connected then sending maximum value so that this move is choesen
+//    {
+//        return 500;
+//    }
+
+//    // calculating previous stats this would be used to calculate mobility
+//    //pair<float,float> p2 = centerOfMass(prevBoard,opponentTurn);
+//    //float den2 = density(prevBoard,p2,opponentTurn);
+//    float con2 = connectedness(prevBoard,opponentTurn);
+//    //float qu2 = quad(prevBoard,opponentTurn);
+//    float po2 = placement(prevBoard,opponentTurn);
+
+//    // calculating current board stats for opponent
+
+//    //pair<float,float> p3 = centerOfMass(boardMatrix,opponentTurn);
+//    //float den3 = density(boardMatrix,p2,opponentTurn);
+//    float con3 = connectedness(boardMatrix,opponentTurn);
+//    //float qu3 = quad(boardMatrix,opponentTurn);
+//    float po3 = placement(boardMatrix,opponentTurn);
+
+
+
+//    //calculating mobility
+//    float mobility = 0;
+//    if(con2-con3>=10)
+//    {
+//        mobility += 250;
+//    }
+//    if(po2-po3>=10)
+//    {
+//        mobility += 250;
+//    }
+
+//    // scaling everything in range of 500
+//    float scale = 500;
+//    den = den-0.2; // offsetting .2 because worst case value is around .2
+//    den = min(den*200,scale); // scalling in 500 range
+//    con = con*5; // con's maximum value 100 so getting in 500 range
+//    po = po*5;
+//    //mobility and quad are already in 500 range
+//    // co efficient initilization for average case
+//    float a1 = 0.1; // density is not so important
+//    float a2 = 0.40; // connection is very important
+//    float a3 = 0.1; // quad is not important as well
+//    float a4 = 0.40; // position is super important at beggining
+//    float a5 = 0; // depends
+//    float result = 0;
+
+//    if(po<200) // position is utmost priority in the begining
+//    {
+//        a2 = 0.40;
+//        a4 = 0.50;
+//    }
+//    if(mobility>=100)
+//    {
+//        // incorporating mobility for attacking adversary
+//        a1 = 0;
+//        a2 = 0.30;
+//        a3 = 0;
+//        a4 = 0.40;
+//        a5 = 0.40;
+//    }
+
+
+//    result = a1*den+a2*con+a3*qu+a4*po+a5*mobility;
+
+//    return result;
+//}
+
+
 
 void AI::createPossibleMoves(vector<Move> &nextMoves, vector<vector<int> > &boardMatrix, int turn)
 {
@@ -582,6 +819,83 @@ void AI::createPossibleMoves(vector<Move> &nextMoves, vector<vector<int> > &boar
             }
         }
     }
+
+
+}
+
+QString AI::heuristicStr(vector<vector<int> > &boardMatrix, int turn)
+{
+    QString s = "player "+QString::number(turn)+":\n";
+//    //label->setText("player "+QString::number(turn));
+
+//    pair<float,float> p = centerOfMass(boardMatrix,myTurn);
+//    float den = density(boardMatrix,p,myTurn);
+//     // scalling in 500 range
+//    float con = connectedness(boardMatrix,myTurn);
+
+//    float qu = quad(boardMatrix,myTurn);
+
+//    float pla = placement(boardMatrix, myTurn);
+
+//    s += "density: "+QString::number(den)+"\n";
+//    //label->setText(s);
+
+//    s += "quadScore: "+QString::number(qu)+"\n";
+//    //label->setText(s);
+
+//    s += "connectedness: "+QString::number(con)+"\n";
+//    //label->setText(s);
+
+//    s += "placementScore: "+QString::number(pla)+"\n";
+//    //label->setText(s);
+
+//    qDebug().noquote()<<s;
+//    return s;
+    pair<float,float> p1 = centerOfMass(boardMatrix,turn);
+    float den = density(boardMatrix,p1,turn);
+    float con = connectedness(boardMatrix,turn);
+    float qu = quad(boardMatrix,turn);
+    float po = placement(boardMatrix,turn);
+
+
+
+
+
+
+    //calculating mobility
+
+
+    // scaling everything in range of 500
+    float scale = 500;
+    den = den-0.1; // offsetting .2 because worst case value is around .2
+    den = min(den*200,scale); // scalling in 500 range
+    con = con*5; // con's maximum value 100 so getting in 500 range
+    po = po*5;
+    //mobility and quad are already in 500 range
+    // co efficient initilization for average case
+    float a1 = 0.1; // density is not so important
+    float a2 = 0.40; // connection is very important
+    float a3 = 0.1; // quad is not important as well
+    float a4 = 0.40; // position is super important at beggining
+    float a5 = 0; // depends
+    float result = 0;
+
+    if(po<200) // position is utmost priority in the begining
+    {
+        a2 = 0.30;
+        a4 = 0.50;
+    }
+
+    result = a1*den+a2*con+a3*qu+a4*po;
+
+    s+= "density: "+QString::number(den)+"\n";
+    s+= "connectedness: "+QString::number(con)+"\n";
+    s+= "quad: "+QString::number(qu)+"\n";
+    s+= "positionalValue: "+QString::number(po)+"\n";
+    s+= "result: "+QString::number(result)+"\n";
+
+    return s;
+
 
 
 }

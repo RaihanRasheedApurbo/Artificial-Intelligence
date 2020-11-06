@@ -53,6 +53,7 @@ private:
     QLabel *statusLabel;
     QLabel *boardLabel;
     QLabel *moveLabel;
+    QLabel *heuristicLabel;
     unordered_set<pair<int,int>, hash_pair> nextMoves;
     int turn;
     int selected;
