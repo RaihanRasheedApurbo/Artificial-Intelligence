@@ -53,14 +53,18 @@ OBJECTS_DIR   = ./
 ####### Files
 
 SOURCES       = ../LOA/CustomButton.cpp \
+		../LOA/ai.cpp \
 		../LOA/board.cpp \
 		../LOA/main.cpp \
-		../LOA/mainwindow.cpp moc_board.cpp \
+		../LOA/mainwindow.cpp \
+		../LOA/move.cpp moc_board.cpp \
 		moc_mainwindow.cpp
 OBJECTS       = CustomButton.o \
+		ai.o \
 		board.o \
 		main.o \
 		mainwindow.o \
+		move.o \
 		moc_board.o \
 		moc_mainwindow.o
 DIST          = ../../../../Qt/5.15.1/gcc_64/mkspecs/features/spec_pre.prf \
@@ -241,11 +245,15 @@ DIST          = ../../../../Qt/5.15.1/gcc_64/mkspecs/features/spec_pre.prf \
 		../../../../Qt/5.15.1/gcc_64/mkspecs/features/yacc.prf \
 		../../../../Qt/5.15.1/gcc_64/mkspecs/features/lex.prf \
 		../LOA/LOA.pro ../LOA/CustomButton.h \
+		../LOA/ai.h \
 		../LOA/board.h \
-		../LOA/mainwindow.h ../LOA/CustomButton.cpp \
+		../LOA/mainwindow.h \
+		../LOA/move.h ../LOA/CustomButton.cpp \
+		../LOA/ai.cpp \
 		../LOA/board.cpp \
 		../LOA/main.cpp \
-		../LOA/mainwindow.cpp
+		../LOA/mainwindow.cpp \
+		../LOA/move.cpp
 QMAKE_TARGET  = LOA
 DESTDIR       = 
 TARGET        = LOA
@@ -629,8 +637,8 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents ../../../../Qt/5.15.1/gcc_64/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents ../LOA/CustomButton.h ../LOA/board.h ../LOA/mainwindow.h $(DISTDIR)/
-	$(COPY_FILE) --parents ../LOA/CustomButton.cpp ../LOA/board.cpp ../LOA/main.cpp ../LOA/mainwindow.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents ../LOA/CustomButton.h ../LOA/ai.h ../LOA/board.h ../LOA/mainwindow.h ../LOA/move.h $(DISTDIR)/
+	$(COPY_FILE) --parents ../LOA/CustomButton.cpp ../LOA/ai.cpp ../LOA/board.cpp ../LOA/main.cpp ../LOA/mainwindow.cpp ../LOA/move.cpp $(DISTDIR)/
 	$(COPY_FILE) --parents ../LOA/board.ui ../LOA/mainwindow.ui $(DISTDIR)/
 
 
@@ -782,6 +790,14 @@ moc_board.cpp: ../LOA/board.h \
 		../../../../Qt/5.15.1/gcc_64/include/QtWidgets/qlabel.h \
 		../../../../Qt/5.15.1/gcc_64/include/QtWidgets/qframe.h \
 		../../../../Qt/5.15.1/gcc_64/include/QtCore/QVector \
+		../../../../Qt/5.15.1/gcc_64/include/QtCore/QThread \
+		../../../../Qt/5.15.1/gcc_64/include/QtCore/qthread.h \
+		../../../../Qt/5.15.1/gcc_64/include/QtCore/qdeadlinetimer.h \
+		../../../../Qt/5.15.1/gcc_64/include/QtCore/qelapsedtimer.h \
+		../../../../Qt/5.15.1/gcc_64/include/QtCore/QTimer \
+		../../../../Qt/5.15.1/gcc_64/include/QtCore/qtimer.h \
+		../../../../Qt/5.15.1/gcc_64/include/QtCore/qbasictimer.h \
+		../LOA/ai.h \
 		moc_predefs.h \
 		../../../../Qt/5.15.1/gcc_64/bin/moc
 	/home/sherrinford/Qt/5.15.1/gcc_64/bin/moc $(DEFINES) --include '/home/sherrinford/Desktop/AI offline/Line of Action/build-LOA-Desktop_Qt_5_15_1_GCC_64bit-Debug/moc_predefs.h' -I/home/sherrinford/Qt/5.15.1/gcc_64/mkspecs/linux-g++ -I'/home/sherrinford/Desktop/AI offline/Line of Action/LOA' -I/home/sherrinford/Qt/5.15.1/gcc_64/include -I/home/sherrinford/Qt/5.15.1/gcc_64/include/QtWidgets -I/home/sherrinford/Qt/5.15.1/gcc_64/include/QtGui -I/home/sherrinford/Qt/5.15.1/gcc_64/include/QtCore -I. -I/usr/include/c++/9 -I/usr/include/x86_64-linux-gnu/c++/9 -I/usr/include/c++/9/backward -I/usr/lib/gcc/x86_64-linux-gnu/9/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include ../LOA/board.h -o moc_board.cpp
@@ -906,6 +922,14 @@ moc_mainwindow.cpp: ../LOA/mainwindow.h \
 		../../../../Qt/5.15.1/gcc_64/include/QtWidgets/qlabel.h \
 		../../../../Qt/5.15.1/gcc_64/include/QtWidgets/qframe.h \
 		../../../../Qt/5.15.1/gcc_64/include/QtCore/QVector \
+		../../../../Qt/5.15.1/gcc_64/include/QtCore/QThread \
+		../../../../Qt/5.15.1/gcc_64/include/QtCore/qthread.h \
+		../../../../Qt/5.15.1/gcc_64/include/QtCore/qdeadlinetimer.h \
+		../../../../Qt/5.15.1/gcc_64/include/QtCore/qelapsedtimer.h \
+		../../../../Qt/5.15.1/gcc_64/include/QtCore/QTimer \
+		../../../../Qt/5.15.1/gcc_64/include/QtCore/qtimer.h \
+		../../../../Qt/5.15.1/gcc_64/include/QtCore/qbasictimer.h \
+		../LOA/ai.h \
 		moc_predefs.h \
 		../../../../Qt/5.15.1/gcc_64/bin/moc
 	/home/sherrinford/Qt/5.15.1/gcc_64/bin/moc $(DEFINES) --include '/home/sherrinford/Desktop/AI offline/Line of Action/build-LOA-Desktop_Qt_5_15_1_GCC_64bit-Debug/moc_predefs.h' -I/home/sherrinford/Qt/5.15.1/gcc_64/mkspecs/linux-g++ -I'/home/sherrinford/Desktop/AI offline/Line of Action/LOA' -I/home/sherrinford/Qt/5.15.1/gcc_64/include -I/home/sherrinford/Qt/5.15.1/gcc_64/include/QtWidgets -I/home/sherrinford/Qt/5.15.1/gcc_64/include/QtGui -I/home/sherrinford/Qt/5.15.1/gcc_64/include/QtCore -I. -I/usr/include/c++/9 -I/usr/include/x86_64-linux-gnu/c++/9 -I/usr/include/c++/9/backward -I/usr/lib/gcc/x86_64-linux-gnu/9/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include ../LOA/mainwindow.h -o moc_mainwindow.cpp
@@ -1045,6 +1069,9 @@ CustomButton.o: ../LOA/CustomButton.cpp ../LOA/CustomButton.h \
 		../../../../Qt/5.15.1/gcc_64/include/QtCore/QString
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o CustomButton.o ../LOA/CustomButton.cpp
 
+ai.o: ../LOA/ai.cpp ../LOA/ai.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ai.o ../LOA/ai.cpp
+
 board.o: ../LOA/board.cpp ../LOA/board.h \
 		../../../../Qt/5.15.1/gcc_64/include/QtWidgets/QDialog \
 		../../../../Qt/5.15.1/gcc_64/include/QtWidgets/qdialog.h \
@@ -1161,6 +1188,14 @@ board.o: ../LOA/board.cpp ../LOA/board.h \
 		../../../../Qt/5.15.1/gcc_64/include/QtWidgets/qlabel.h \
 		../../../../Qt/5.15.1/gcc_64/include/QtWidgets/qframe.h \
 		../../../../Qt/5.15.1/gcc_64/include/QtCore/QVector \
+		../../../../Qt/5.15.1/gcc_64/include/QtCore/QThread \
+		../../../../Qt/5.15.1/gcc_64/include/QtCore/qthread.h \
+		../../../../Qt/5.15.1/gcc_64/include/QtCore/qdeadlinetimer.h \
+		../../../../Qt/5.15.1/gcc_64/include/QtCore/qelapsedtimer.h \
+		../../../../Qt/5.15.1/gcc_64/include/QtCore/QTimer \
+		../../../../Qt/5.15.1/gcc_64/include/QtCore/qtimer.h \
+		../../../../Qt/5.15.1/gcc_64/include/QtCore/qbasictimer.h \
+		../LOA/ai.h \
 		ui_board.h \
 		../../../../Qt/5.15.1/gcc_64/include/QtCore/QVariant \
 		../../../../Qt/5.15.1/gcc_64/include/QtWidgets/QApplication \
@@ -1292,6 +1327,14 @@ main.o: ../LOA/main.cpp ../LOA/mainwindow.h \
 		../../../../Qt/5.15.1/gcc_64/include/QtWidgets/qlabel.h \
 		../../../../Qt/5.15.1/gcc_64/include/QtWidgets/qframe.h \
 		../../../../Qt/5.15.1/gcc_64/include/QtCore/QVector \
+		../../../../Qt/5.15.1/gcc_64/include/QtCore/QThread \
+		../../../../Qt/5.15.1/gcc_64/include/QtCore/qthread.h \
+		../../../../Qt/5.15.1/gcc_64/include/QtCore/qdeadlinetimer.h \
+		../../../../Qt/5.15.1/gcc_64/include/QtCore/qelapsedtimer.h \
+		../../../../Qt/5.15.1/gcc_64/include/QtCore/QTimer \
+		../../../../Qt/5.15.1/gcc_64/include/QtCore/qtimer.h \
+		../../../../Qt/5.15.1/gcc_64/include/QtCore/qbasictimer.h \
+		../LOA/ai.h \
 		../../../../Qt/5.15.1/gcc_64/include/QtWidgets/QApplication \
 		../../../../Qt/5.15.1/gcc_64/include/QtWidgets/qapplication.h \
 		../../../../Qt/5.15.1/gcc_64/include/QtCore/qcoreapplication.h \
@@ -1421,6 +1464,14 @@ mainwindow.o: ../LOA/mainwindow.cpp ../LOA/mainwindow.h \
 		../../../../Qt/5.15.1/gcc_64/include/QtWidgets/qlabel.h \
 		../../../../Qt/5.15.1/gcc_64/include/QtWidgets/qframe.h \
 		../../../../Qt/5.15.1/gcc_64/include/QtCore/QVector \
+		../../../../Qt/5.15.1/gcc_64/include/QtCore/QThread \
+		../../../../Qt/5.15.1/gcc_64/include/QtCore/qthread.h \
+		../../../../Qt/5.15.1/gcc_64/include/QtCore/qdeadlinetimer.h \
+		../../../../Qt/5.15.1/gcc_64/include/QtCore/qelapsedtimer.h \
+		../../../../Qt/5.15.1/gcc_64/include/QtCore/QTimer \
+		../../../../Qt/5.15.1/gcc_64/include/QtCore/qtimer.h \
+		../../../../Qt/5.15.1/gcc_64/include/QtCore/qbasictimer.h \
+		../LOA/ai.h \
 		ui_mainwindow.h \
 		../../../../Qt/5.15.1/gcc_64/include/QtCore/QVariant \
 		../../../../Qt/5.15.1/gcc_64/include/QtWidgets/QApplication \
@@ -1439,6 +1490,9 @@ mainwindow.o: ../LOA/mainwindow.cpp ../LOA/mainwindow.h \
 		../../../../Qt/5.15.1/gcc_64/include/QtWidgets/qstatusbar.h \
 		../../../../Qt/5.15.1/gcc_64/include/QtWidgets/QWidget
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o mainwindow.o ../LOA/mainwindow.cpp
+
+move.o: ../LOA/move.cpp ../LOA/move.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o move.o ../LOA/move.cpp
 
 moc_board.o: moc_board.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_board.o moc_board.cpp

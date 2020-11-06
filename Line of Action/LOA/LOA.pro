@@ -10,14 +10,18 @@ CONFIG += c++11
 
 SOURCES += \
     CustomButton.cpp \
+    ai.cpp \
     board.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    move.cpp
 
 HEADERS += \
     CustomButton.h \
+    ai.h \
     board.h \
-    mainwindow.h
+    mainwindow.h \
+    move.h
 
 FORMS += \
     board.ui \

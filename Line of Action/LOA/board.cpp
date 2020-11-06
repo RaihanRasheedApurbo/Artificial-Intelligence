@@ -396,21 +396,23 @@ void Board::handleClickVsCom()
 
                 bool over = checkGameOver();
 
+
+                selected = 0;
+                selectedX = -5;
+                selectedY = -5;
                 if(over==false)
                 {
                     turn = 2;
-
+                    spinAI();
                 }
                 else
                 {
                     turn = 0;
                 }
 
-                selected = 0;
-                selectedX = -5;
-                selectedY = -5;
 
-                spinAI();
+
+
 
 
 
@@ -520,6 +522,16 @@ void Board::handleClickVsCom()
     printLabels();
 }
 
+void Board::handleTimer()
+{
+    QTimer *q = (QTimer *) sender();
+    q->stop();
+    delete q;
+    timeUp = true;
+    qDebug()<<"inside timer handler";
+
+}
+
 void Board::printLabels()
 {
     //printing status
@@ -528,7 +540,14 @@ void Board::printLabels()
     statusLabel->setText(QString::fromStdString(s));
 
     //printing board
-    s = "Board Matrix:\n";
+    s = printBoard();
+    boardLabel->setText(QString::fromStdString(s));
+
+}
+
+string Board::printBoard()
+{
+    string s = "Board Matrix:\n";
     for(int i=0,len = boardMatrix.size();i<len;i++)
     {
 
@@ -541,8 +560,7 @@ void Board::printLabels()
     s += "\n";
     s += "Player 1 has: " + std::to_string(player1Pieces) + "\n";
     s += "Player 2 has: " + std::to_string(player2Pieces) + "\n";
-    boardLabel->setText(QString::fromStdString(s));
-
+    return s;
 }
 
 bool Board::searchMatrix(int searchNumber)
@@ -1103,23 +1121,70 @@ void Board::undoColorNextMovePlaces()
 
 void Board::spinAI()
 {
-    int len = boardMatrix.size();
-    bool done = false;
-    for(int i=0;i<len;i++)
-    {
-        if(done == true)
-        {
-            break;
-        }
-        for(int j=0;j<len;j++)
-        {
-            if(boardMatrix[i][j]==2)
-            {
-                buttons[i][j]->clicked();
+//    int len = boardMatrix.size();
+////    timeUp = false;
+////    QTimer *q = new QTimer();
+////    connect(q, SIGNAL(timeout()), this, SLOT(handleTimer()));
+////    q->setInterval(1000);
+////    q->start();
+//    qDebug().noquote()<<QString::fromStdString(printBoard());
+//    pair<float,float> p = AI::centerOfMass(boardMatrix,1);
+//    qDebug().noquote()<<"center of mass of 1: "<<QString::number(p.first)<<","<<QString::number(p.second);
+//    float d1 = AI::density(boardMatrix,p,1);
+//    qDebug().noquote()<<"density of 1: "<<QString::number(d1);
+//    d1 = AI::connectedness(boardMatrix,1);
+//    qDebug().noquote()<<"connectedness of 1: "<<QString::number(d1);
 
-            }
-        }
-    }
+
+//    for(int i=0;i<len;i++)
+//    {
+
+//        for(int j=0;j<len;j++)
+//        {
+//            if(boardMatrix[i][j]==2)
+//            {
+//                buttons[i][j]->clicked();
+//                findNextMove();
+//                if(nextMoves.size()>0)
+//                {
+//                    break;
+//                }
+//                else
+//                {
+//                    buttons[i][j]->clicked();
+//                }
+
+//            }
+//        }
+//    }
+//    int x = nextMoves.begin()->first;
+//    int y = nextMoves.begin()->second;
+//    buttons[x][y]->clicked();
+
+
+    qDebug().noquote()<<QString::fromStdString(printBoard());
+    pair<float,float> p2 = AI::centerOfMass(boardMatrix,2);
+    qDebug().noquote()<<"center of mass of 2: "<<QString::number(p2.first)<<","<<QString::number(p2.second);
+    float d2 = AI::density(boardMatrix,p2,2);
+    qDebug().noquote()<<"density of 2: "<<QString::number(d2);
+    d2 = AI::connectedness(boardMatrix,2);
+    qDebug().noquote()<<"connectedness of 2: "<<QString::number(d2);
+    AI::alphaBetaSearch(boardMatrix,4,2);
+    Move &t = AI::currentBestMove;
+    int fromX = t.fromX;
+    int fromY = t.fromY;
+    int toX  = t.toX;
+    int toY = t.toY;
+    qDebug()<<"currentBestMove: "<<fromX<<" "<<fromY<<" "<<toX<<" "<<toY;
+    buttons[fromX][fromY]->clicked();
+    buttons[toX][toY]->clicked();
+    float d = AI::heuristicValue(boardMatrix,2);
+
+    qDebug()<<"best value:"<<d;
+    qDebug()<<AI::count;
+    qDebug()<<AI::prunedCount;
+    AI::count = 0;
+
 }
 
 bool Board::nextMove(CustomButton *selectedMove)

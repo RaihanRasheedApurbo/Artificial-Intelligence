@@ -14,6 +14,9 @@
 #include <string>
 #include <bits/stdc++.h>
 #include <CustomButton.h>
+#include <QThread>
+#include <QTimer>
+#include "ai.h"
 using namespace std;
 
 using namespace std;
@@ -43,6 +46,7 @@ public:
 private slots:
     void handleClick();
     void handleClickVsCom();
+    void handleTimer();
 private:
     Ui::Board *ui;
     QVector<QVector<CustomButton *>> buttons;
@@ -58,6 +62,7 @@ private:
     int player2Pieces;
     std::vector<std::vector<int>> boardMatrix;
     void printLabels();
+    string printBoard();
     bool checkGameOver();
     bool searchMatrix(int searchNumber);
     void findNextMove();
@@ -68,6 +73,7 @@ private:
     void spinAI();
     bool nextMove(CustomButton *selectedMove);
     bool vsCom;
+    bool timeUp;
 };
 
 #endif // BOARD_H
