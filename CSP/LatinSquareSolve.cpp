@@ -213,7 +213,7 @@ int main()
             }
             return get<3>(a)>get<3>(b);  // breaking ties by taking larger forward degree
         };
-        function<bool(void)> brelazRec = [&] (void)->bool
+        /*function<bool(void)> brelazRec = [&] (void)->bool
         {
             vector<CellNode> selectionCriterion; // 4 int represents row,column,domain,and forward degree 
             // and would be used in sorting to find which variable to pick for instantsiation
@@ -287,14 +287,14 @@ int main()
                 for(auto it=choices.begin();it!=choices.end();it++)
                 {
                     choiceCopy.push_back(*it);
-                    //cout<<*it<<" ";
+                    cout<<*it<<" ";
                 }
-                //cout<<endl;
+                cout<<endl;
                 for(int it = 0;it<choiceCopy.size();it++)
                 {
                     //cout<<"hello"<<endl;
                     int value = choiceCopy[it];
-                    //cout<<"choosing value "<<value<<endl;
+                    cout<<"choosing value "<<value<<endl;
                     
                     if(value<0||value>10)
                     {
@@ -356,6 +356,194 @@ int main()
 
             
         };
+        */
+        //brelazRec();
+        function<bool(void)> brelazRec = [&] (void)->bool
+        {
+            vector<CellNode> selectionCriterion; // 4 int represents row,column,domain,and forward degree 
+            // and would be used in sorting to find which variable to pick for instantsiation
+
+            for(int i=0;i<n;i++)
+            {
+                for(int j=0;j<n;j++)
+                {
+                    if(table[i][j]==0)
+                    {
+                        int r = i;
+                        int c = j;
+                        
+                        unordered_set<int> t;//for calculating domain size
+                        for(int k=0;k<n;k++)
+                        {
+                            t.insert(k+1);
+                        }
+                        int forwardDegree = 0;
+                        for(int k=0;k<n;k++)
+                        {
+                            if(table[i][k]!=0)
+                            {
+                                t.erase(table[i][k]);
+                            }
+                            if(table[k][j]!=0)
+                            {
+                                t.erase(table[k][j]);
+                            }
+
+                            if(table[i][k]==0)
+                            {
+                                forwardDegree++;
+                            }
+                            if(table[k][j]==0)
+                            {
+                                forwardDegree++;
+                            }
+                        }
+                        if(t.size() == 0)
+                        {
+                            numberOfFailure++;
+                            //cout<<"leaf node"<<endl;
+                            return false;
+                        }
+
+                        selectionCriterion.push_back(make_tuple(r,c,t.size(),forwardDegree));
+                    }
+                     
+                }
+            }
+            if(selectionCriterion.size()==0)
+            {
+                return true;
+            }
+            sort(selectionCriterion.begin(),selectionCriterion.end(),comparatorForBrelaz);
+            // cout<<"printing after sort"<<endl;
+            // for(int i=0;i<selectionCriterion.size();i++)
+            // {
+            //     auto &t = selectionCriterion[i];
+            //     cout<<get<0>(t)<<" "<<get<1>(t)<<" "<<get<2>(t)<<" "<<get<3>(t)<<endl;
+            // }
+
+            for(int i=0;i<selectionCriterion.size();i++)
+            {
+                //cout<<"hello-1"<<endl;
+                auto &t = selectionCriterion[i];
+                //cout<<"hello-1.0001"<<endl;
+                int row = get<0>(t);
+                int col = get<1>(t);
+                //cout<<"picking "<<row<<" "<<col<<" cell"<<endl;
+                
+                //cout<<"hello-1.0011"<<endl;
+                //cout<<row<<" "<<col<<endl;
+                //auto &choices = contenders[row][col];
+                //cout<<"hello-1.1"<<endl;
+                // if(choices.size()==0)
+                // {
+                //     numberOfFailure++;
+                //     return false;
+                // }
+                //cout<<"hello-2"<<endl;
+                //vector<int> choiceCopy; // copying so that iterator doesn't shift while recursion.... 
+                // it game be bug when i used set iterator inside next for loop that calls the recursion...
+                //cout<<"printing contenders: "<<endl;.
+                unordered_set<int> choiceSet;
+                for(int j=0;j<n;j++)
+                {
+                    choiceSet.insert(j+1);
+                }
+                for(int j=0;j<n;j++)
+                {
+                    choiceSet.erase(table[row][j]);
+                    choiceSet.erase(table[j][col]);
+                }
+                if(choiceSet.size()==0)
+                {
+                    numberOfFailure++;
+                    return false;
+                }
+                vector<int> choiceArr;
+                for(auto it = choiceSet.begin();it!=choiceSet.end();it++)
+                {
+                    choiceArr.push_back(*it);
+                }
+                sort(choiceArr.begin(),choiceArr.end());
+
+
+                // cout<<endl;
+                for(auto it = choiceArr.begin();it!=choiceArr.end();it++)
+                {
+                    //cout<<"hello"<<endl;
+                    int value = *it;
+                    //cout<<"choosing value "<<value<<endl;
+                    
+                    if(value<0||value>10)
+                    {
+                        cout<<"hi\n";
+                    }
+                    //cout<<"hello1"<<endl;
+                    
+                    for(int j=0;j<n;j++)
+                    {
+                        if(table[row][j]==value)
+                        {
+                            cout<<"shouldn't happen"<<endl;
+                        }
+                        if(table[j][col]==value)
+                        {
+                            cout<<"shouldn't happen"<<endl;
+                        }
+
+                        //contenders[row][j].erase(value);
+                       
+                        //contenders[j][col].erase(value);
+                        
+                    }
+                    table[row][col] = value;
+                    //cout<<"hello2"<<endl;
+                    
+
+                    numberOfNode++;
+                    // cout<<numberOfNode<<" "<<numberOfFailure<<" "<<selectionCriterion.size()<<endl;
+                    // for(int i=0;i<n;i++)
+                    // {
+                    //     for(int j=0;j<n;j++)
+                    //     {
+                    //         cout<<table[i][j]<<" ";
+                    //     }
+                    //     cout<<endl;
+                    // }
+                    bool result = brelazRec();
+                    if(result==true)
+                    {
+                        return true;
+                    }
+                    table[row][col] = 0;
+                    // for(int j=0;j<n;j++)
+                    // {
+                    //     if(table[row][j]==0)
+                    //     {
+                    //         contenders[row][j].insert(value);
+                    //     }
+                    //     if(table[j][col]==0)
+                    //     {
+                    //         contenders[j][col].insert(value);
+                    //     }
+                        
+                        
+                    // }
+                    //cout<<"hello3"<<endl;
+
+
+
+                }
+                
+            }
+            //cout<<"hello4"<<endl;
+            
+            return false;
+
+
+            
+        
+        };
         brelazRec();
         cout<<"number of failure: "<<numberOfFailure<<endl;
         cout<<"number of node visited: "<<numberOfNode<<endl;
@@ -365,7 +553,9 @@ int main()
        
 
     };
+    
     brelaz();
+
 
     function<void(void)> bruteForceBackTracking = [&] (void)->void
     {
