@@ -3,6 +3,7 @@
         "ostream": "cpp",
         "iostream": "cpp",
         "functional": "cpp",
-        "tuple": "cpp"
+        "tuple": "cpp",
+        "iosfwd": "cpp"
     }
 }

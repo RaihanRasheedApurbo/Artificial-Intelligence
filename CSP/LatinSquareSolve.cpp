@@ -3,10 +3,57 @@ using namespace std;
 
 int main()
 {
-    cout << "kill meh" << endl;
+    ifstream inputFile;
+    //inputFile.open("d-10-09.txt.txt");
+    inputFile.open("custominput");
+
+    string t;
+    stringstream data;
+    inputFile >> t;
+    // extracting n from first line.... 
+    for (int i = 0; i < t.size(); i++)
+    {
+        if (t[i] >= '0' && t[i] <= '9')
+        {
+            data << t[i];
+        }
+    }
+    data<<endl;
+    // int count;
+    // data>>count;
+    // cout<<count<<endl;
+    // escaping 2nd and 3rd line
+    inputFile >> t;
+    inputFile >> t;
+    while (!inputFile.eof())
+    {
+        string t;
+        
+        inputFile >> t;
+        if (t[0] == '|')
+        {
+            data << endl; // adding new line after each integer..
+            continue;
+        }
+        for (int i = 0; i < t.size(); i++)
+        {
+            if (t[i] >= '0' && t[i] <= '9')
+            {
+                data << t[i];
+            }
+        }
+        data<<" "; // adding space after each integer
+        //int num;
+        //cout << t << endl;
+        //data >> num;
+        //cout << num << " ";
+    }
+
+    //cout << "kill meh" << endl;
 
     int n;
-    cin >> n;
+    data >> n;
+    
     vector<vector<int>> square;
     for (int i = 0; i < n; i++)
     {
@@ -14,24 +61,26 @@ int main()
         for (int j = 0; j < n; j++)
         {
             int p;
-            cin >> p;
+            data >> p;
             t.push_back(p);
         }
         square.push_back(t);
     }
 
-    // cout<<"I am printing now"<<endl;
-    // for(int i=0;i<n;i++)
-    // {
-    //     for(int j=0;j<n;j++)
-    //     {
-    //         cout<<square[i][j]<<" ";
-    //     }
-    //     cout<<endl;
-    // }
+    cout<<"I am printing now"<<endl;
+    cout<<n<<endl;
+    for(int i=0;i<n;i++)
+    {
+        for(int j=0;j<n;j++)
+        {
+            cout<<square[i][j]<<" ";
+        }
+        cout<<endl;
+    }
 
     function<void(vector<vector<int>> &)> latinSquareTest = [&](vector<vector<int>> &s) -> void {
-        cout << "I am printing now" << endl;
+        cout<<endl<<endl;
+        cout << "***I am printing now***" << endl;
         for (int i = 0; i < n; i++)
         {
             for (int j = 0; j < n; j++)
@@ -557,7 +606,7 @@ int main()
         };
         */
         brelazRec();
-        
+
         //solution printing and testing codes
         latinSquareTest(table);
         cout << "number of failure: " << numberOfFailure << endl;
@@ -637,7 +686,7 @@ int main()
             return false;
         };
         rec();
-        
+
         //solution printing and testing codes
         latinSquareTest(square);
         cout << "number of failure: " << numberOfFailure << endl;
