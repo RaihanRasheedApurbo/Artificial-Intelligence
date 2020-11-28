@@ -4,8 +4,8 @@ using namespace std;
 int main()
 {
     ifstream inputFile;
-    //inputFile.open("d-10-09.txt.txt");
-    inputFile.open("custominput");
+    inputFile.open("d-10-09.txt.txt");
+    //inputFile.open("custominput");
 
     string t;
     stringstream data;
@@ -67,7 +67,7 @@ int main()
         square.push_back(t);
     }
 
-    cout<<"I am printing now"<<endl;
+    cout<<"Input Data"<<endl;
     cout<<n<<endl;
     for(int i=0;i<n;i++)
     {
