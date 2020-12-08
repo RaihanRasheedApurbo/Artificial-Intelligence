@@ -1,0 +1,65 @@
+<html>
+    <head>
+       
+    </head>
+    <body>
+        <div id="div1">
+
+        </div>
+        <div id="log">
+
+        </div>
+        <script>
+            // var para = document.createElement("p");
+            // para.append("kill meh");
+            // // var node = document.createTextNode("This is new.");
+            // // para.appendChild(node);
+            var gridSize = 0;
+
+            function printLog(msg) {
+                var para = document.createElement("p");
+                para.append(msg);
+                var element = document.getElementById("log");
+                element.appendChild(para);
+            }
+
+            var textBox = document.createElement("INPUT");
+            
+            textBox.setAttribute("type", "text");
+
+            var submitButton = document.createElement("INPUT");
+            
+            submitButton.setAttribute("type", "submit");
+
+
+            
+            
+            function submitButtonOnClick() {
+               
+                //printLog(parseInt(textBox.value)+5);
+                var temp = parseInt(textBox.value);
+                // printLog(temp);
+                if(isNaN(temp))
+                {
+                    printLog("please give valid input");
+                }
+
+
+            }
+            
+            submitButton.addEventListener("click",submitButtonOnClick);
+
+
+
+
+
+    
+            var element = document.getElementById("div1");
+            element.appendChild(textBox);
+            element.appendChild(submitButton);
+            
+        </script>
+    </body>
+    
+    
+</html>
