@@ -1,65 +1,518 @@
 <html>
-    <head>
-       
-    </head>
-    <body>
-        <div id="div1">
 
-        </div>
-        <div id="log">
+<head>
 
-        </div>
-        <script>
-            // var para = document.createElement("p");
-            // para.append("kill meh");
-            // // var node = document.createTextNode("This is new.");
-            // // para.appendChild(node);
-            var gridSize = 0;
+</head>
 
-            function printLog(msg) {
-                var para = document.createElement("p");
-                para.append(msg);
-                var element = document.getElementById("log");
-                element.appendChild(para);
-            }
+<body>
+    <div id="div1">
 
-            var textBox = document.createElement("INPUT");
-            
-            textBox.setAttribute("type", "text");
+    </div>
+    <div id="log">
 
-            var submitButton = document.createElement("INPUT");
-            
-            submitButton.setAttribute("type", "submit");
+    </div>
+    <script>
+        // var para = document.createElement("p");
+        // para.append("kill meh");
+        // // var node = document.createTextNode("This is new.");
+        // // para.appendChild(node);
+        var gridSize = 0;
+        var element = document.getElementById("div1");
+        var buttons = [];
+        var states = [];
+        var totalHorizontalVerticalProb = .80;
+        var totalDiagonalProb = 1 - totalHorizontalVerticalProb;
+        var currentSelectedButton = {
+            x: -5,
+            y: -5,
+        };
+        var ghostPosition = {
+            x: -5,
+            y: -5,
+        }
+        var sensorError = 0.10;
 
 
-            
-            
-            function submitButtonOnClick() {
-               
-                //printLog(parseInt(textBox.value)+5);
-                var temp = parseInt(textBox.value);
-                // printLog(temp);
-                if(isNaN(temp))
-                {
-                    printLog("please give valid input");
+
+
+
+        function forwardTimeHandler() {
+            var tempNewStateProb = [];
+            for (var i = 0; i < gridSize; i++) {
+                var t1 = [];
+                for (var j = 0; j < gridSize; j++) {
+                    // states[i][j].prob = parseFloat((states[i][j].prob + 0.01).toFixed(2));
+                    // buttons[i][j].innerHTML = states[i][j].prob;
+                    var currentStateNewProb = 0;
+                    horizontalVerticalNeighbors = [];
+                    if (i - 1 >= 0) {
+                        horizontalVerticalNeighbors.push({
+                            x: i - 1,
+                            y: j,
+                        });
+                    }
+                    if (i + 1 < gridSize) {
+                        horizontalVerticalNeighbors.push({
+                            x: i + 1,
+                            y: j,
+                        });
+                    }
+                    if (j + 1 < gridSize) {
+                        horizontalVerticalNeighbors.push({
+                            x: i,
+                            y: j + 1,
+                        });
+                    }
+                    if (j - 1 >= 0) {
+                        horizontalVerticalNeighbors.push({
+                            x: i,
+                            y: j - 1,
+                        });
+                    }
+                    var len1 = horizontalVerticalNeighbors.length;
+                    var distributionForEachNeighbors = (totalHorizontalVerticalProb / len1);
+
+                    for (var k = 0; k < len1; k++) {
+                        var neighborX = horizontalVerticalNeighbors[k].x;
+                        var neighborY = horizontalVerticalNeighbors[k].y;
+                        var prevStateProb = states[neighborX][neighborY].prob;
+                        //summation of transition probability * previousState probability
+                        currentStateNewProb += distributionForEachNeighbors * prevStateProb;
+                         
+                    }
+
+                    var diagonalNeighbors = [];
+
+                    if (i - 1 >= 0 && j - 1 >= 0) {
+                        diagonalNeighbors.push({
+                            x: i - 1,
+                            y: j - 1,
+                        });
+                    }
+                    if (i - 1 >= 0 && j + 1 < gridSize) {
+                        diagonalNeighbors.push({
+                            x: i - 1,
+                            y: j + 1,
+                        });
+                    }
+                    if (i + 1 < gridSize && j - 1 >= 0) {
+                        diagonalNeighbors.push({
+                            x: i + 1,
+                            y: j - 1,
+                        });
+                    }
+                    if (i + 1 < gridSize && j + 1 < gridSize) {
+                        diagonalNeighbors.push({
+                            x: i + 1,
+                            y: j + 1,
+                        });
+                    }
+                    var len2 = diagonalNeighbors.length;
+                    var distributionForEachDiagonalNeighbors = (totalDiagonalProb / len2);
+
+                    for (var k = 0; k < len2; k++) {
+                        var neighborX = diagonalNeighbors[k].x;
+                        var neighborY = diagonalNeighbors[k].y;
+                        var prevStateProb = states[neighborX][neighborY].prob;
+                        //summation of transition probability * previousState probability
+                        currentStateNewProb += distributionForEachDiagonalNeighbors * prevStateProb;
+                         
+                    }
+                    // printLog("i j currentStateNewProb len1 len2");
+                    // printLog(i+" "+j+" "+currentStateNewProb+" "+len1+" "+len2);
+                    var stateInstance = {
+                        prob: parseFloat(currentStateNewProb.toFixed(2)),
+                        horizontalVerticalNeighbors: horizontalVerticalNeighbors,
+                        diagonalNeighbors: diagonalNeighbors,
+                    };
+                    t1.push(stateInstance);
+                    
+
+
+
                 }
+                tempNewStateProb.push(t1);
+            }
+            for(var i=0;i<gridSize;i++)
+            {
+                for(var j=0;j<gridSize;j++)
+                {
+                    states[i][j].prob = tempNewStateProb[i][j].prob;
+                    buttons[i][j].innerHTML = states[i][j].prob;
+                    //buttons[i][j].innerHTML = Math.random(); // just for testing
+                }
+            }
+
+
+            // moving ghost to its new position...
+            var r1 = Math.random();
+            console.log(r1);
+            if(r1<=totalHorizontalVerticalProb)
+            {
+                var x = ghostPosition.x;
+                var y = ghostPosition.y;
+
+                var len1 = tempNewStateProb[x][y].horizontalVerticalNeighbors.length;
+                var r2 = Math.floor(Math.random()*len1);
+                ghostPosition.x = tempNewStateProb[x][y].horizontalVerticalNeighbors[r2].x;
+                ghostPosition.y = tempNewStateProb[x][y].horizontalVerticalNeighbors[r2].y;
+                
+            }
+            else
+            {
+                var x = ghostPosition.x;
+                var y = ghostPosition.y;
+
+                var len1 = tempNewStateProb[x][y].diagonalNeighbors.length;
+                var r2 = Math.floor(Math.random()*len1);
+                ghostPosition.x = tempNewStateProb[x][y].diagonalNeighbors[r2].x;
+                ghostPosition.y = tempNewStateProb[x][y].diagonalNeighbors[r2].y;
+
+            }
+            console.log(ghostPosition);
+
+        }
+
+        function captureHandler(){
+            console.log(ghostPosition);
+            console.log(currentSelectedButton);
+            if(currentSelectedButton.x<0||currentSelectedButton.y<0)
+            {
+                console.log("Please select a cell to place your radar");
+                return;
+            }
+            if(ghostPosition.x==currentSelectedButton.x && 
+            ghostPosition.y==currentSelectedButton.y)
+            {
+               console.log("you captured the ghost!");
+            }
+            else
+            {
+                console.log("Sorry ghost is not here...");
+            }
+            
+        }
+        function radarHandler() {
+
+            console.log(ghostPosition);
+            console.log(currentSelectedButton);
+            if(currentSelectedButton.x<0||currentSelectedButton.y<0)
+            {
+                console.log("Please select a cell to place your radar");
+                return;
+            }
+
+            var manDistance = Math.abs(ghostPosition.x-currentSelectedButton.x) +
+                              Math.abs(ghostPosition.y-currentSelectedButton.y);
+            
+            var maxManDistance = 2*(gridSize-1);
+
+            var ratio = manDistance/maxManDistance;
+
+            var color = "none";
+
+            if(ratio<=0.33)
+            {
+                color = "red";
+            }
+            else if(ratio<=.66)
+            {
+                color = "orange";
+            }
+            else
+            {
+                color = "green";
+            }
+
+            console.log(color);
+            var normalizationDenominator = 0;
+            for(var i=0;i<gridSize;i++)
+            {
+                for(var j=0;j<gridSize;j++)
+                {
+                    var currentX = i;
+                    var currentY = j;
+                    var evidenceX = currentSelectedButton.x;
+                    var evidenceY = currentSelectedButton.y;
+
+
+                    var manhattanDistance = Math.abs(currentX-evidenceX) + Math.abs(currentY-evidenceY);;
+
+                    var ratio = manhattanDistance/maxManDistance;
+                    var desiredColor = "none";
+                    if(ratio<.33)
+                    {
+                        desiredColor = "red";
+                    }
+                    else if(ratio<.66)
+                    {
+                        desiredColor = "orange";
+                    }
+                    else
+                    {
+                        desiredColor = "green";
+                    }
+
+                    if(desiredColor==color)
+                    {
+                        //parseFloat(currentStateNewProb.toFixed(2))
+                        states[i][j].prob = parseFloat(((1-sensorError) * states[i][j].prob).toFixed(2));
+                        normalizationDenominator += states[i][j].prob;
+                    }   
+                    else
+                    {
+                        var t = (sensorError) * states[i][j].prob;
+                        console.log("t "+t);
+                        states[i][j].prob = parseFloat(((sensorError) * states[i][j].prob).toFixed(2));
+                        normalizationDenominator += states[i][j].prob;
+                    }
+
+
+                }
+            }
+            console.log(color);
+            console.log(normalizationDenominator);
+            for(var i=0;i<gridSize;i++)
+            {
+                for(var j=0;j<gridSize;j++)
+                {
+                    states[i][j].prob = parseFloat((states[i][j].prob/normalizationDenominator).toFixed(2));
+                    buttons[i][j].innerHTML = states[i][j].prob;
+                    //console.log(i+" "+j+" "+states[i][j].prob);
+                }
+            }
+
+
+        }
+
+
+        function createUI() {
+            function stateButtonHandler(event) {
+                //printLog("kill meh");
+                //console.log(event);
+                //console.log(event.srcElement.id);
+                //console.log(Math.floor(event.srcElement.id/gridSize));
+                //console.log(event.srcElement.id%gridSize);
+
+
+                var x = Math.floor(event.srcElement.id/gridSize);
+                var y = event.srcElement.id%gridSize;
+                
+                if(currentSelectedButton.x >=0 && currentSelectedButton.y >=0)
+                {
+                    buttons[currentSelectedButton.x][currentSelectedButton.y].style.color = 'white';
+                }
+                if(currentSelectedButton.x == x && currentSelectedButton.y == y)
+                {
+                    //deslecting
+                    currentSelectedButton.x = -5;
+                    currentSelectedButton.y = -5;
+                    return;
+                }
+                buttons[x][y].style.color = 'black';
+                currentSelectedButton.x = x;
+                currentSelectedButton.y = y;
+
+
+                //console.log(currentSelectedButton);
+            }
+            
+            var initProb = parseFloat((1 / (gridSize * gridSize)).toFixed(2));
+            for (var i = 0; i < gridSize; i++) {
+                var br = document.createElement("br");
+                element.appendChild(br);
+                var t1 = []
+                var t2 = []
+                for (var j = 0; j < gridSize; j++) {
+
+
+                    var button = document.createElement("button");
+                    //button.innerHTML= ((j+1).toString(10));
+                    button.addEventListener("click", stateButtonHandler);
+                    button.id = i*gridSize + j;
+                    element.appendChild(button);
+
+                    button.style.width = '50px'; // setting the width to 200px
+                    button.style.height = '50px'; // setting the height to 200px
+                    button.style.background = 'teal'; // setting the background color to teal
+                    button.style.color = 'white'; // setting the color to white
+                    //button.style.fontSize = '20px'; // setting the font size to 20px
+                    t1.push(button);
+                    t2.push({
+                        prob: initProb,//initial prob
+                    });
+                    button.innerHTML = (initProb.toString());
+                }
+                buttons.push(t1);
+                states.push(t2);
+
 
 
             }
+            // console.log(states);
+            // console.log(buttons);
+
+            printBreak(4);
+
+            var forwardButton = document.createElement("button");
+
+            //forwardButton.setAttribute("type", "submit");
+
+            forwardButton.innerHTML = "Forward Time";
+
+            // function forwardTime(){
+            //     printLog("kill meh");
+
+            // }
+
+
+
+            forwardButton.addEventListener("click", forwardTimeHandler);
+
+
+
+            element.appendChild(forwardButton);
+
+            printBreak(2);
+
+            var radarButton = document.createElement("button");
+            radarButton.addEventListener("click",radarHandler);
+            //captureButton.setAttribute("type", "submit");
+
+            radarButton.innerHTML = "Use Radar";
+
+            element.appendChild(radarButton);
+
+            printBreak(2);
+
+            var captureButton = document.createElement("button");
+        
+            captureButton.innerHTML = "Capture Ghost!";
+            captureButton.addEventListener("click",captureHandler);
+
+            element.appendChild(captureButton);
+
+            printBreak(2);
+
+            var reloadButton = document.createElement("button");
+            reloadButton.innerHTML = "Reload";
+
+            function reload() {
+                location.reload();
+            }
+
+            reloadButton.addEventListener("click", reload);
+
+            element.appendChild(reloadButton);
+
+
+            // var clearLogButton = document.createElement("button");
+            // clearLogButton.innerHTML = "Clear";
+
+            // function clearLog() {
+            //     var logElement = document.getElementById("log");
+
+            //     var len = logElement.childNodes.length;
+            //     for (var i = 0; i < len; i++) {
+            //         //console.log('hi');
+            //         logElement.removeChild(logElement.childNodes[0]);
+            //     }
+
+            // }
+
+            // clearLogButton.addEventListener("click", clearLog);
+
+            // element.appendChild(clearLogButton);
+
+            // setting ghost position
+            // here equally likely.... 
+            var row = Math.floor(Math.random()*gridSize);
+            var col = Math.floor(Math.random()*gridSize);
+
+            ghostPosition.x = row;
+            ghostPosition.y = col;
             
-            submitButton.addEventListener("click",submitButtonOnClick);
 
 
 
 
 
-    
-            var element = document.getElementById("div1");
-            element.appendChild(textBox);
-            element.appendChild(submitButton);
-            
-        </script>
-    </body>
-    
-    
+
+
+
+
+        }
+
+        function printBreak(num) {
+
+            for (var i = 0; i < num; i++) {
+                var br = document.createElement("br");
+                element.appendChild(br);
+            }
+
+        }
+
+        function printLog(msg) {
+            var para = document.createElement("p");
+            para.append(msg);
+            var element = document.getElementById("log");
+            element.appendChild(para);
+        }
+
+        
+        var textBox = document.createElement("INPUT");
+
+        textBox.setAttribute("type", "text");
+
+        var submitButton = document.createElement("INPUT");
+
+        submitButton.setAttribute("type", "submit");
+
+
+
+
+        function submitButtonOnClick() {
+
+            var temp = parseInt(textBox.value);
+
+            if(isNaN(temp))
+            {
+                printLog("please give valid input");
+                return;
+            }
+
+            gridSize = temp;
+
+            submitButton.hidden = true;
+            textBox.hidden = true;
+
+            createUI();
+
+
+            // hard coding now just to debug faster 
+
+            // gridSize = 3;
+
+            // submitButton.hidden = true;
+            // textBox.hidden = true;
+
+            // createUI();
+
+
+
+
+
+
+        }
+
+        submitButton.addEventListener("click", submitButtonOnClick);
+        element.appendChild(textBox);
+        element.appendChild(submitButton);
+
+        // submitButton.click();
+
+    </script>
+</body>
+
+
 </html>
